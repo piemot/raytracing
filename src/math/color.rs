@@ -126,6 +126,6 @@ impl Display for Color {
 }
 
 pub fn write_color(out: &mut impl std::io::Write, color: &Color) {
-    let [r, g, b] = color.as_rgb_ints();
+    let [r, g, b] = color.as_gamma_corrected().as_rgb_ints();
     write!(out, "{r} {g} {b}\n").unwrap();
 }
