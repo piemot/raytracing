@@ -43,5 +43,37 @@ This will work, because `as_unit()` returns a vector that is known to be normali
 use_normalized(&Vec3::new(1.0, 2.0, 3.0).as_unit());
 ```
 
-### Color & Interval
+### Color & Interval (5b245d5)
 Added the Color and the Interval structs - neither are particularly interesting and mostly copied from previous projects.
+
+## Feb 17
+
+* test PPM format: [assets/test-ppm.ppm](assets/test-ppm.ppm)
+PPM is a very simple image format. It starts with a header:
+```
+P3
+<width> <height>
+<max-brightness>
+```
+And from then on, each row is three space-delimited integers, representing the brightness of each RGB value.
+The start of `test-ppm` appears as so:
+
+```ppm
+P3
+256 256
+255
+0 0 0
+1 0 0
+2 0 0
+3 0 0
+4 0 0
+5 0 0
+6 0 0
+7 0 0
+8 0 0
+9 0 0
+10 0 0
+11 0 0
+12 0 0
+...
+```
