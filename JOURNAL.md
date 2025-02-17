@@ -94,3 +94,16 @@ It can also be thought of as a function $P(t) = A + tB$,
 where $A$ is the `point` it originates from and $B$ is a vector travelling from that point.
 Accordingly, a $t$ value of `0.0` will return point $A$, a value of `1.0` will return the vector sum of $A$ and $B$,
 and values outside that range will be extended **past** the area that vector $B$ covers.
+
+### Sending Rays
+
+Fundamentally, a ray tracer does a few simple steps. 
+1. Create a ray from the camera through a given pixel.
+![A ray is cast through a viewplane](assets/02-17-raycast.svg)
+2. Find what objects in the scene the ray touches.
+3. Find the color of the closest touched object.
+
+Since we cast rays through a 2d plane (marked as `Viewport` above), representing 2d coordinates would be a good idea.
+2d coordinates can be represented with a Vec3 or Point3 by setting `z` to `0.0`, but having separate structs for a 2d space
+is a better practice because 2d coordinates must be limited to a 2d space. 
+Setting a different `z` value should not be an option.

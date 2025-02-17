@@ -4,6 +4,8 @@ pub use math::point;
 pub use math::point::Point3;
 
 pub use math::vec;
+pub use math::vec::two_d;
+pub use math::vec::two_d::Vec2;
 pub use math::vec::Vec3;
 
 pub use math::interval;
