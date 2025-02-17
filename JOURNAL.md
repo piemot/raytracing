@@ -48,7 +48,9 @@ Added the Color and the Interval structs - neither are particularly interesting 
 
 ## Feb 17
 
-* test PPM format: [assets/test-ppm.ppm](assets/test-ppm.ppm)
+### PPM Format
+[assets/test-ppm.ppm](assets/test-ppm.ppm)
+
 PPM is a very simple image format. It starts with a header:
 ```
 P3
@@ -77,3 +79,9 @@ P3
 12 0 0
 ...
 ```
+
+### Using the `Color` struct
+
+Since changing over to the `Color` struct for writing colors, things look fairly different because of gamma-correction.
+I'll probably write more on gamma-correction later because it's interesting, but suffice it to say that effectively, 
+all color values are square rooted.
