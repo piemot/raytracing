@@ -2,6 +2,9 @@ use crate::Interval;
 use std::fmt::Display;
 
 /// Represents an RGB color with 3 floats, ranging from `(0.0, 0.0, 0.0)` (black) to `(1.0, 1.0, 1.0)` (white).
+/// Invalid colors (colors outside the `0.0..=1.0` range) may be constructed; check [`Color::is_valid()`]
+/// if a color must be valid.
+/// Alternatively, the color can be clamped when converting to RGB with [`Color::as_rgb_ints()`].
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Color {
     r: f64,
@@ -11,8 +14,8 @@ pub struct Color {
 
 impl Color {
     /// Create a new Color with the given RGB values.
-    /// ```rs
-    /// use crate::Color;
+    /// ```
+    /// use raytracing::Color;
     /// let green = Color::new(0.0, 1.0, 1.0);
     /// ```
     #[must_use]
@@ -120,4 +123,9 @@ impl Display for Color {
                 .finish()
         }
     }
+}
+
+pub fn write_color(out: &mut impl std::io::Write, color: &Color) {
+    let [r, g, b] = color.as_rgb_ints();
+    write!(out, "{r} {g} {b}\n").unwrap();
 }
