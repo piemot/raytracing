@@ -8,7 +8,7 @@ A journal of my progress on this project.
 * Initialized project
 * Created README.md
 
-### Vectors
+### Vectors (ca9c4a4)
 Created the `Vec3` and `Point3` structs.
 
 Each of these represent a point in 3-dimensional space. Internally, a Vec3 is represented the same way as a Point3.
@@ -42,3 +42,6 @@ This will work, because `as_unit()` returns a vector that is known to be normali
 ```rs
 use_normalized(&Vec3::new(1.0, 2.0, 3.0).as_unit());
 ```
+
+### Color & Interval
+Added the Color and the Interval structs - neither are particularly interesting and mostly copied from previous projects.

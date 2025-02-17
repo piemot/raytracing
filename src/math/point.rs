@@ -1,6 +1,9 @@
-/* use crate::math::macros::forward_ref_binop;
+use crate::math::macros::forward_ref_binop;
 use crate::Vec3;
-use std::ops::{Add, Sub};
+use std::{
+    fmt::Display,
+    ops::{Add, Sub},
+};
 
 /// Represents a point in 3 dimensional space.
 ///
@@ -98,6 +101,16 @@ impl Sub<Vec3> for Point3 {
 
 forward_ref_binop! { impl Sub, sub for Point3, Vec3 }
 
+impl Display for Point3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Point3")
+            .field(&self.x())
+            .field(&self.y())
+            .field(&self.z())
+            .finish()
+    }
+}
+
 // Vectors and points can be trivially substituted.
 impl From<Point3> for Vec3 {
     fn from(value: Point3) -> Self {
@@ -110,4 +123,3 @@ impl From<Vec3> for Point3 {
         Point3::new(value.x(), value.y(), value.z())
     }
 }
- */
