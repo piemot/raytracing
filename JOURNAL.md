@@ -85,3 +85,12 @@ P3
 Since changing over to the `Color` struct for writing colors, things look fairly different because of gamma-correction.
 I'll probably write more on gamma-correction later because it's interesting, but suffice it to say that effectively, 
 all color values are square rooted.
+
+### `Ray` struct
+
+`Ray` is a small utility class I forgot to implement yesterday.
+It represents a vector that starts at a single point, and allows calculating a point along that vector.
+It can also be thought of as a function $P(t) = A + tB$, 
+where $A$ is the `point` it originates from and $B$ is a vector travelling from that point.
+Accordingly, a $t$ value of `0.0` will return point $A$, a value of `1.0` will return the vector sum of $A$ and $B$,
+and values outside that range will be extended **past** the area that vector $B$ covers.
