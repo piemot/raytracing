@@ -16,8 +16,11 @@ mod private {
 }
 
 #[doc(hidden)]
+#[derive(Debug)]
 pub struct Unknown {}
+
 #[doc(hidden)]
+#[derive(Debug)]
 pub struct Normalized {}
 
 #[doc(hidden)]
@@ -76,12 +79,19 @@ impl NormalizationState for Normalized {}
 ///
 /// [`Vec3`]: crate::Vec3
 ///
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Default)]
 pub struct Vec3<N: NormalizationState = Unknown> {
     x: f64,
     y: f64,
     z: f64,
     normalized: PhantomData<N>,
+}
+
+// PartialEq does not depend on `normalized`
+impl<N: NormalizationState> PartialEq for Vec3<N> {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
 }
 
 // Because of the use of PhantomData, manual implementaitons of Clone and Copy are necessary.
