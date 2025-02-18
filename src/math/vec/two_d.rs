@@ -6,7 +6,10 @@ use std::{
     ops::{Add, AddAssign, Neg, Sub, SubAssign},
 };
 
-use super::normal::{NormalizationState, Normalized, Unknown};
+use super::{
+    normal::{NormalizationState, Normalized, Unknown},
+    Vec3,
+};
 
 /// Represents a vector in 2 dimensional space, with its origin at (0, 0).
 /// Despite the similar naming, a [`Vec2`] is **very different** from a [`std::vec::Vec`].
@@ -328,5 +331,11 @@ mod test {
         let vec = vec.normalize();
         // length is =~ 1.00
         assert!((vec.len() - 1.0).abs() < 0.001);
+    }
+}
+
+impl From<Vec2> for Vec3 {
+    fn from(value: Vec2) -> Self {
+        Vec3::new(value.x(), value.y(), 0.0)
     }
 }

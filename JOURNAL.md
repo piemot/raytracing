@@ -107,3 +107,26 @@ Since we cast rays through a 2d plane (marked as `Viewport` above), representing
 2d coordinates can be represented with a Vec3 or Point3 by setting `z` to `0.0`, but having separate structs for a 2d space
 is a better practice because 2d coordinates must be limited to a 2d space. 
 Setting a different `z` value should not be an option.
+
+### Viewport
+
+![A diagram of the viewport](assets/02-17-viewport.svg)
+
+The viewport has a few properties that need to be considered. First, we need to be able to navigate through it.
+We can define 2D vectors $u$ and $v$ as vectors that cross the top and side of the viewport, and then
+divide them by the viewport's width and height respectively to get $\Delta u$ and $\Delta v$, 
+which define the distance between rendered pixels.
+
+The rays we send towards pixels should be sent to the **center** of those pixels, 
+so we need to shift their positions by $\frac{1}{2}\Delta v + \frac{1}2\Delta u$ 
+to make them centered. This is represented by the red vector in the above image.
+
+### Background
+
+If rays don't hit anything, what do we render? The guide suggests rendering
+a bluish colour based on the y-value of the ray. The ray has to be normalized first,
+so that the y component cannot be larger than `1.0`.
+
+> **Sidenote**: In hindsight, enabling gamma correction earlier was a mistake as many of the
+> examples used in the guidebook assume it's disabled. Since reenabling it is a
+> simple matter of adding `.as_gamma_corrected()`, I'll disable it again for now.

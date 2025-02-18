@@ -56,6 +56,18 @@ impl Point3 {
     pub fn z(&self) -> f64 {
         self.z
     }
+
+    pub fn shift_x(&self, x: f64) -> Point3 {
+        Point3::new(self.x + x, self.y, self.z)
+    }
+
+    pub fn shift_y(&self, y: f64) -> Point3 {
+        Point3::new(self.x, self.y + y, self.z)
+    }
+
+    pub fn shift_z(&self, z: f64) -> Point3 {
+        Point3::new(self.x, self.y, self.z + z)
+    }
 }
 
 // Note that Point3 + Point3 ≠ Point3,

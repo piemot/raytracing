@@ -1,4 +1,4 @@
-use crate::Interval;
+use crate::{Interval, Vec3};
 use std::fmt::Display;
 
 /// Represents an RGB color with 3 floats, ranging from `(0.0, 0.0, 0.0)` (black) to `(1.0, 1.0, 1.0)` (white).
@@ -96,6 +96,14 @@ impl Color {
 
         inter.contains(self.r) && inter.contains(self.g) && inter.contains(self.b)
     }
+
+    /// Creates a color from a [`Vec3`], mapping `x` to `r`, `y` to `g`, and `z` to `b`.
+    /// To create a valid color, each axis the [`Vec3`] should range from `0.0..=1.0`.
+    /// This can most easily be accomplished by normalizing the vector. However,
+    /// this function will accept vectors that produce invalid colors.
+    pub fn from_vec3(vec: &Vec3) -> Self {
+        Self::new(vec.x(), vec.y(), vec.z())
+    }
 }
 
 fn linear_to_gamma(linear_component: f64) -> f64 {
@@ -126,6 +134,6 @@ impl Display for Color {
 }
 
 pub fn write_color(out: &mut impl std::io::Write, color: &Color) {
-    let [r, g, b] = color.as_gamma_corrected().as_rgb_ints();
+    let [r, g, b] = color.as_rgb_ints();
     write!(out, "{r} {g} {b}\n").unwrap();
 }
