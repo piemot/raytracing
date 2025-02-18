@@ -1,3 +1,4 @@
+pub mod hittable;
 pub mod math;
 
 pub use math::point;
@@ -16,3 +17,5 @@ pub use math::color::Color;
 
 pub use math::ray;
 pub use math::ray::Ray3;
+
+pub use hittable::{HitRecord, Hittable};

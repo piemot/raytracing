@@ -1,4 +1,8 @@
-use raytracing::{color::write_color, Color, Point3, Ray3, Vec2, Vec3};
+use raytracing::{
+    color::write_color,
+    hittable::{HittableVec, Sphere},
+    Color, Hittable, Point3, Ray3, Vec2, Vec3,
+};
 use std::io;
 
 fn main() {
@@ -54,6 +58,12 @@ fn main() {
 
     // |> Render <|
 
+    let mut world = HittableVec::new();
+    let a = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+    world.add(&a);
+    let a = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0);
+    world.add(&a);
+
     // header
     print!("P3\n{} {}\n255\n", image_width, image_height);
 
@@ -67,21 +77,31 @@ fn main() {
 
             let ray = Ray3::new(camera_center, ray_direction);
 
-            let px_color = ray_color(&ray);
+            let px_color = ray_color(&ray, &world);
 
             write_color(&mut stdout, &px_color);
         }
     }
 }
-
-fn ray_color(ray: &Ray3) -> Color {
-    const SPHERE_COLOR: Color = Color::new(0.384313725490196, 0.309803921568627, 0.949019607843137);
-
-    // if it hits a sphere at the center of the viewport:
-    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
-        return SPHERE_COLOR;
+/*
+color ray_color(const ray& r, const hittable& world) {
+    hit_record rec;
+    if (world.hit(r, 0, infinity, rec)) {
+        return 0.5 * (rec.normal + color(1,1,1));
     }
 
+    vec3 unit_direction = unit_vector(r.direction());
+    auto a = 0.5*(unit_direction.y() + 1.0);
+    return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+} */
+
+fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {
+    if let Some(hit) = world.hit(ray, 0.0, f64::INFINITY) {
+        let half_normal: Vec3 = hit.normal() * 0.5;
+        return Color::from_vec3(&(half_normal + Vec3::new(1.0, 1.0, 1.0)));
+    }
+
+    // "sky" colouring
     let nd = ray.direction().as_unit();
     let intensity = (nd.y() + 1.0) * 0.5;
 
@@ -90,12 +110,18 @@ fn ray_color(ray: &Ray3) -> Color {
 
     Color::from_vec3(&(whiteness + coloring))
 }
-
-fn hit_sphere(center: &Point3, radius: f64, ray: &Ray3) -> bool {
+/*
+fn hit_sphere(center: &Point3, radius: f64, ray: &Ray3) -> Option<f64> {
     let oc = center - ray.origin();
-    let a = Vec3::dot(&ray.direction(), &ray.direction());
-    let b = -2.0 * Vec3::dot(&ray.direction(), &oc);
-    let c = Vec3::dot(&oc, &oc) - radius * radius;
-    let disc = (b * b) - (4.0 * a * c);
-    disc >= 0.0
+    let a = ray.direction().len_squared();
+    let h = Vec3::dot(&ray.direction(), &oc);
+    let c = oc.len_squared() - radius * radius;
+    let disc = h * h - a * c;
+
+    if disc < 0.0 {
+        None
+    } else {
+        Some((h - disc.sqrt()) / a)
+    }
 }
+ */

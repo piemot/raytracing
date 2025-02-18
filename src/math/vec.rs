@@ -122,7 +122,7 @@ impl<T: NormalizationState> Vec3<T> {
 
     /// Returns the dot product of two [`Vec3`]s.
     #[inline]
-    pub fn dot(&self, rhs: &Vec3) -> f64 {
+    pub fn dot<A: NormalizationState>(&self, rhs: &Vec3<A>) -> f64 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
@@ -219,12 +219,23 @@ impl Vec3<Unknown> {
     pub fn as_unit(&self) -> Vec3<Normalized> {
         self.normalize()
     }
+
+    /// Asserts that the current Vec3 is normalized, and returns a Vec3 marked as Normalized.
+    /// This function is NOT CHECKED. It should be used for performance-critical applications.
+    pub fn assert_is_normalized(self) -> Vec3<Normalized> {
+        Vec3::<Normalized> {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+            normalized: PhantomData,
+        }
+    }
 }
 
 impl Vec3<Normalized> {}
 
-impl Neg for Vec3 {
-    type Output = Vec3;
+impl<T: NormalizationState> Neg for Vec3<T> {
+    type Output = Vec3<T>;
 
     fn neg(self) -> Self::Output {
         Vec3 {
@@ -239,9 +250,9 @@ impl Neg for Vec3 {
 forward_ref_unop! {impl Neg, neg for Vec3}
 
 impl Add for Vec3 {
-    type Output = Self;
+    type Output = Vec3;
 
-    fn add(self, rhs: Self) -> Self {
+    fn add(self, rhs: Self) -> Self::Output {
         Self {
             x: self.x + rhs.x,
             y: self.y + rhs.y,
@@ -260,7 +271,7 @@ impl AddAssign for Vec3 {
 }
 
 impl Sub for Vec3 {
-    type Output = Self;
+    type Output = Vec3;
 
     fn sub(self, rhs: Self) -> Self {
         self.add(-rhs)
@@ -280,7 +291,7 @@ macro_rules! impl_vec_scalar_ops {
     ($($ty:ident),*) => {
         use std::ops::{Mul, Div, MulAssign, DivAssign};
         $(
-            impl Mul<$ty> for Vec3 {
+            impl<T: NormalizationState> Mul<$ty> for Vec3<T> {
                 type Output = Vec3;
                 fn mul(self, rhs: $ty) -> Self::Output {
                     let mul: f64 = rhs.into();

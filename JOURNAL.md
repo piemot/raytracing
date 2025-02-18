@@ -137,4 +137,10 @@ Mathematical details about ray-sphere intersection are available in
 [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html#addingasphere/ray-sphereintersection), so I won't go into too much detail.
 Essentially, we derive a formula that has one solvable root each time it passes through an edge of the sphere;
 from this, we can determine whether or not the ray has hit the sphere.
-For now, if it has, we'll render it in a solid color.
+For now, if it has, we'll render it in a color describing the normal vector off of its surface.
+
+### `Hittable` trait
+
+The `Hittable` trait describes an object or a body that can be hit. 
+Currently, only `Sphere`s can be hit, but other objects will be added later.
+
