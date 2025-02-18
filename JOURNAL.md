@@ -130,3 +130,11 @@ so that the y component cannot be larger than `1.0`.
 > **Sidenote**: In hindsight, enabling gamma correction earlier was a mistake as many of the
 > examples used in the guidebook assume it's disabled. Since reenabling it is a
 > simple matter of adding `.as_gamma_corrected()`, I'll disable it again for now.
+
+### Sphere intersection
+
+Mathematical details about ray-sphere intersection are available in 
+[Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html#addingasphere/ray-sphereintersection), so I won't go into too much detail.
+Essentially, we derive a formula that has one solvable root each time it passes through an edge of the sphere;
+from this, we can determine whether or not the ray has hit the sphere.
+For now, if it has, we'll render it in a solid color.

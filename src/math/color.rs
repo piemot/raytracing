@@ -19,7 +19,7 @@ impl Color {
     /// let green = Color::new(0.0, 1.0, 1.0);
     /// ```
     #[must_use]
-    pub fn new(r: f64, g: f64, b: f64) -> Self {
+    pub const fn new(r: f64, g: f64, b: f64) -> Self {
         Self { r, g, b }
     }
 

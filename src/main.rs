@@ -75,6 +75,13 @@ fn main() {
 }
 
 fn ray_color(ray: &Ray3) -> Color {
+    const SPHERE_COLOR: Color = Color::new(0.384313725490196, 0.309803921568627, 0.949019607843137);
+
+    // if it hits a sphere at the center of the viewport:
+    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
+        return SPHERE_COLOR;
+    }
+
     let nd = ray.direction().as_unit();
     let intensity = (nd.y() + 1.0) * 0.5;
 
@@ -82,4 +89,13 @@ fn ray_color(ray: &Ray3) -> Color {
     let coloring = Vec3::new(0.5, 0.7, 1.0) * intensity;
 
     Color::from_vec3(&(whiteness + coloring))
+}
+
+fn hit_sphere(center: &Point3, radius: f64, ray: &Ray3) -> bool {
+    let oc = center - ray.origin();
+    let a = Vec3::dot(&ray.direction(), &ray.direction());
+    let b = -2.0 * Vec3::dot(&ray.direction(), &oc);
+    let c = Vec3::dot(&oc, &oc) - radius * radius;
+    let disc = (b * b) - (4.0 * a * c);
+    disc >= 0.0
 }
