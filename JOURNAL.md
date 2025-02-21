@@ -155,3 +155,27 @@ Functions were refactored to use the Interval struct.
 Camera code was refactored into its own struct. Since it's fairly complicated,
 the builder pattern may need to be used later once it grows more complex.
 For now, having some simple initialization functions suffices.
+
+### Antialiasing
+
+The images we're creating are only 400px wide, so of course there will be some jaggedness.
+However, when the pixels are coloured according to whether or not the center of them
+intersects an object, there's a very sudden change in colour at the edge of the object.
+
+Antialiasing is our solution to this problem. Instead of always calculating a single pixel, 
+a given pixel is sampled multiple times at slightly varying positions, then averaged together.
+
+> **\***_[Pixels aren't always squares](https://www.researchgate.net/publication/244986797_A_Pixel_Is_Not_A_Little_Square_A_Pixel_Is_Not_A_Little_Square_A_Pixel_Is_Not_A_Little_Square),
+> but it's an assumption that ususally holds well enough._
+
+We'll sample from a square centred at the centre of the pixel, but I'm curious to know if/how sampling
+from a disc instead affects the resultant rendering.
+
+![Diifferences in 5-100 sample and square vs circular anti-aliasing techniques](assets/02-20-antialiasing.svg)
+
+After some experimentation... there isn't really a discernable difference, as far as I can tell.
+I'll just stick to square for now for its simplicity.
+
+Also, effects are definitely noticable at 100 samples compared to 10, but the 10x speed increase is
+much more valuble to me on a MacBook. For development, I'll probably keep a very low sampling value
+or disable antialiasing entirely.

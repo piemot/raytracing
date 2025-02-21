@@ -1,6 +1,14 @@
+use crate::{color::write_color, Color, Hittable, Interval, Point3, Ray3, Vec2, Vec3};
 use std::io;
 
-use crate::{color::write_color, Color, Hittable, Interval, Point3, Ray3, Vec2, Vec3};
+#[derive(Debug)]
+/// How pixels are sampled during antialiasing
+pub enum AntialiasingType {
+    /// Sample points from a `1px × 1px` square centred on the pixel's centre
+    Square,
+    /// Sample points from an `r = 0.5px` disc centred on the pixel's centre
+    Disc,
+}
 
 #[derive(Debug)]
 #[must_use]
@@ -19,6 +27,13 @@ pub struct Camera {
     pxdelta_u: Vec2,
     /// A vector pointing down the left "side" of the viewport
     pxdelta_v: Vec2,
+    /// How pixels are sampled during antialiasing.
+    antialiasing_type: AntialiasingType,
+    /// How many random samples are made per pixel during antialiasing.
+    samples_per_px: u32,
+    /// A fraction (`0.0..=1.0`) to multiply each sample by for antialiasing.
+    /// Should be equal to `1.0 / samples_per_px`.
+    px_sample_scale: f64,
 }
 
 impl Camera {
@@ -73,6 +88,12 @@ impl Camera {
         // The point (in 3d space) of the centre of the top-left pixel.
         let pixel_00: Point3 = viewport_corner + Vec3::from((pxdelta_u + pxdelta_v) / 2.0);
 
+        // |> Antialiasing <|
+
+        let antialiasing_type = AntialiasingType::Square;
+        let samples_per_px = 10;
+        let px_sample_scale = 1.0 / f64::from(samples_per_px);
+
         Self {
             aspect_ratio,
             camera_center,
@@ -81,6 +102,9 @@ impl Camera {
             pixel_00,
             pxdelta_u,
             pxdelta_v,
+            antialiasing_type,
+            samples_per_px,
+            px_sample_scale,
         }
     }
 
@@ -96,19 +120,35 @@ impl Camera {
         let mut stdout = io::stdout().lock();
         for j in 0..*image_height {
             for i in 0..*image_width {
-                // px_center is offset in the 3d plane by 2d vectors i(Δu) and j(Δv).
-                let px_center =
-                    self.pixel_00 + Vec3::from(i * self.pxdelta_u) + Vec3::from(j * self.pxdelta_v);
-                // A vector pointing from the camera to to the center of the pixel in 3d space.
-                let ray_direction = px_center - self.camera_center;
+                let mut px_color = Color::black();
 
-                let ray = Ray3::new(self.camera_center, ray_direction);
+                for _ in 0..self.samples_per_px {
+                    let ray = self.get_ray(i, j);
+                    px_color += Self::ray_color(&ray, world);
+                }
 
-                let px_color = Self::ray_color(&ray, world);
-
+                px_color.set_brightness(self.px_sample_scale);
                 write_color(&mut stdout, &px_color);
             }
         }
+    }
+
+    /// Constructs a camera [`Ray3`] originating from the camera's `center` and directed at a
+    /// randomly sampled point around the pixel location `(i, j)`.
+    fn get_ray(&self, i: u32, j: u32) -> Ray3 {
+        let offset = match self.antialiasing_type {
+            AntialiasingType::Disc => Vec2::random_in_unit_circle() / 2,
+            AntialiasingType::Square => Vec2::random_range(-0.5..0.5),
+        };
+
+        // px_sample is equal to the center of the pixel (offset in the 3d plane by 2d vectors i(Δu) and j(Δv))
+        // plus the random vector of `offset`.
+        let px_sample = self.pixel_00
+            + Vec3::from((f64::from(i) + offset.x()) * self.pxdelta_u)
+            + Vec3::from((f64::from(j) + offset.y()) * self.pxdelta_v);
+
+        let ray_direction = px_sample - self.camera_center;
+        Ray3::new(self.camera_center, ray_direction)
     }
 
     fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {

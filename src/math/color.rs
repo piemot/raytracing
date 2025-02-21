@@ -1,5 +1,5 @@
 use crate::{Interval, Vec3};
-use std::fmt::Display;
+use std::{fmt::Display, ops::AddAssign};
 
 use super::vec::normal::NormalizationState;
 
@@ -106,6 +106,22 @@ impl Color {
     /// this function will accept vectors that produce invalid colors.
     pub fn from_vec3<T: NormalizationState>(vec: &Vec3<T>) -> Self {
         Self::new(vec.x(), vec.y(), vec.z())
+    }
+
+    /// Multplies all values by the supplied `brightness` value.
+    pub fn set_brightness(&mut self, brightness: f64) {
+        self.r *= brightness;
+        self.g *= brightness;
+        self.b *= brightness;
+    }
+}
+
+// Add is intentionally _not implemented_; this is a utility designed for running sums.
+impl AddAssign for Color {
+    fn add_assign(&mut self, rhs: Self) {
+        self.r += rhs.r;
+        self.g += rhs.g;
+        self.b += rhs.b;
     }
 }
 
