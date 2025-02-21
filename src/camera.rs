@@ -165,11 +165,11 @@ impl Camera {
         }
 
         if let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
-            let direction = hit.normal() + Vec3::random_unit_vector();
-            let mut bounce_color =
-                Camera::ray_color(&Ray3::new(hit.point(), direction), depth - 1, world);
-            bounce_color.set_brightness(0.5);
-            return bounce_color;
+            if let Some(scatter) = hit.material().scatter(ray, &hit) {
+                let bounce_color = Camera::ray_color(&scatter.scattered, depth - 1, world);
+                return Color::mul(&scatter.attenuation, &bounce_color);
+            }
+            return Color::black();
         }
 
         // "sky" colouring

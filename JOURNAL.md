@@ -259,3 +259,15 @@ Much more even. See the images these numbers came from here:
 **[Original](assets/gamma-0.ppm)**
 
 **[Gamma-Corrected](assets/gamma-1.ppm)**
+
+## Feb 21
+
+### Materials
+
+So far, the material an object is made of has been hardcoded in the `Camera::ray_color()` function.
+To assign different objects different materials, we need to create a `Material` trait and a `Lambertian`
+struct that impls it. While we're at it, let's create a second material: reflective metal.
+
+With simple specular reflection from a polished metal, the angle of incidence $theta_i$ is equal
+to the angle of reflection, $theta_r$, when both are measured from the normal of the surface.
+This reflected ray is equal to $V - 2N (V \cdot N)$.

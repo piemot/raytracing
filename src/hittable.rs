@@ -1,14 +1,15 @@
-use crate::{vec::Normalized, Interval, Point3, Ray3, Vec3};
+use crate::{vec::Normalized, Interval, Material, Point3, Ray3, Vec3};
 
 #[derive(Debug, Clone)]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     point: Point3,
     normal: Vec3<Normalized>,
+    material: &'a dyn Material,
     t: f64,
     front_face: bool,
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     pub fn point(&self) -> Point3 {
         self.point
     }
@@ -21,6 +22,10 @@ impl HitRecord {
         self.t
     }
 
+    pub fn material(&self) -> &'a (dyn Material + 'a) {
+        self.material
+    }
+
     pub fn front_face(&self) -> bool {
         self.front_face
     }
@@ -30,6 +35,7 @@ impl HitRecord {
         point: &Point3,
         normal: &Vec3<Normalized>,
         t: f64,
+        material: &'a dyn Material,
     ) -> Self {
         let front_face = Vec3::dot(&ray.direction(), normal) < 0.0;
         let normal = if front_face { *normal } else { -*normal };
@@ -38,6 +44,7 @@ impl HitRecord {
             normal,
             t,
             front_face,
+            material,
         }
     }
 
@@ -56,18 +63,23 @@ pub trait Hittable: std::fmt::Debug {
 }
 
 #[derive(Debug)]
-pub struct Sphere {
+pub struct Sphere<'a> {
     center: Point3,
     radius: f64,
+    material: &'a dyn Material,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Self { center, radius }
+impl<'a> Sphere<'a> {
+    pub fn new(center: Point3, radius: f64, material: &'a dyn Material) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
-impl Hittable for Sphere {
+impl Hittable for Sphere<'_> {
     fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.direction().len_squared();
@@ -93,7 +105,13 @@ impl Hittable for Sphere {
         let point = ray.at(root);
         // mathematically guaranteed to be normalized
         let normal = ((point - self.center) / self.radius).assert_is_normalized();
-        Some(HitRecord::from_incoming_ray(ray, &point, &normal, root))
+        Some(HitRecord::from_incoming_ray(
+            ray,
+            &point,
+            &normal,
+            root,
+            self.material,
+        ))
     }
 }
 

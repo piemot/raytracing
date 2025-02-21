@@ -132,6 +132,12 @@ impl<T: NormalizationState> Vec3<T> {
             normalized: PhantomData,
         }
     }
+
+    /// Returns true if the vector is close to zero (within `1e-8`) in all dimensions.
+    pub fn near_zero(&self) -> bool {
+        const THRESHOLD: f64 = 1e-8;
+        self.x.abs() < THRESHOLD && self.y.abs() < THRESHOLD && self.z.abs() < THRESHOLD
+    }
 }
 
 impl Vec3<Unknown> {
@@ -153,6 +159,13 @@ impl Vec3<Unknown> {
             z: 0.0,
             normalized: PhantomData,
         }
+    }
+
+    /// Reflects this vector with the normal vector of the surface.
+    /// Assumes perfect specular reflection: θ_in = θ_out.
+    pub fn reflect(&self, normal: &Vec3<Normalized>) -> Vec3 {
+        let mul = 2.0 * Vec3::dot(self, normal);
+        *self - normal * mul
     }
 
     /// Create a new Vec3, pointing in a random direction between
@@ -254,16 +267,7 @@ impl Vec3<Unknown> {
     }
 }
 
-impl Vec3<Normalized> {
-    pub fn denormalized(&self) -> Vec3 {
-        Vec3 {
-            x: self.x,
-            y: self.y,
-            z: self.z,
-            normalized: PhantomData,
-        }
-    }
-}
+impl Vec3<Normalized> {}
 
 // Vectors can be negated keeping their normalization states.
 impl<T: NormalizationState> Neg for Vec3<T> {
@@ -362,8 +366,26 @@ impl Sub<Vec3> for Vec3<Normalized> {
     }
 }
 
+impl Sub<Vec3<Normalized>> for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Vec3<Normalized>) -> Vec3 {
+        self.add(-rhs)
+    }
+}
+
+impl Sub<Vec3<Normalized>> for Vec3<Normalized> {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Vec3<Normalized>) -> Vec3 {
+        self.add(-rhs)
+    }
+}
+
 forward_ref_binop! {impl Sub, sub for Vec3, Vec3}
 forward_ref_binop! {impl Sub, sub for Vec3<Normalized>, Vec3}
+forward_ref_binop! {impl Sub, sub for Vec3, Vec3<Normalized>}
+forward_ref_binop! {impl Sub, sub for Vec3<Normalized>, Vec3<Normalized>}
 
 impl SubAssign for Vec3 {
     fn sub_assign(&mut self, rhs: Self) {
@@ -389,20 +411,22 @@ macro_rules! impl_vec_scalar_ops {
                 }
             }
 
-            impl Mul<Vec3> for $ty {
+            impl<T: NormalizationState> Mul<Vec3<T>> for $ty {
                 type Output = Vec3;
-                fn mul(self, rhs: Vec3) -> Self::Output {
+                fn mul(self, rhs: Vec3<T>) -> Self::Output {
                     rhs.mul(self)
                 }
             }
 
+            // mulAssign cannot be implemented for Vec3<Normalized>
+            // because it would require changing the type.
             impl MulAssign<$ty> for Vec3 {
                 fn mul_assign(&mut self, rhs: $ty) {
                     *self = self.mul(rhs);
                 }
             }
 
-            impl Div<$ty> for Vec3 {
+            impl<T: NormalizationState> Div<$ty> for Vec3<T> {
                 type Output = Vec3;
                 fn div(self, rhs: $ty) -> Self::Output {
                     let divisor: f64 = rhs.into();
@@ -410,9 +434,9 @@ macro_rules! impl_vec_scalar_ops {
                 }
             }
 
-            impl Div<Vec3> for $ty {
+            impl<T: NormalizationState> Div<Vec3<T>> for $ty {
                 type Output = Vec3;
-                fn div(self, rhs: Vec3) -> Self::Output {
+                fn div(self, rhs: Vec3<T>) -> Self::Output {
                     rhs.div(self)
                 }
             }
@@ -425,8 +449,12 @@ macro_rules! impl_vec_scalar_ops {
 
             forward_ref_binop! {impl Mul, mul for Vec3, $ty}
             forward_ref_binop! {impl Mul, mul for $ty, Vec3}
+            forward_ref_binop! {impl Mul, mul for Vec3<Normalized>, $ty}
+            forward_ref_binop! {impl Mul, mul for $ty, Vec3<Normalized>}
             forward_ref_binop! {impl Div, div for Vec3, $ty}
             forward_ref_binop! {impl Div, div for $ty, Vec3}
+            forward_ref_binop! {impl Div, div for Vec3<Normalized>, $ty}
+            forward_ref_binop! {impl Div, div for $ty, Vec3<Normalized>}
         )*
     };
 }
@@ -440,6 +468,27 @@ impl Display for Vec3 {
             .field(&self.y())
             .field(&self.z())
             .finish()
+    }
+}
+
+impl From<Vec3<Normalized>> for Vec3 {
+    fn from(value: Vec3<Normalized>) -> Self {
+        Vec3 {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            normalized: PhantomData,
+        }
+    }
+}
+impl From<Vec3> for Vec3<Normalized> {
+    fn from(value: Vec3) -> Self {
+        Vec3 {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            normalized: PhantomData,
+        }
     }
 }
 

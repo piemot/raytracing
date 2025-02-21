@@ -114,6 +114,14 @@ impl Color {
         self.g *= brightness;
         self.b *= brightness;
     }
+
+    pub fn mul(&self, rhs: &Color) -> Color {
+        Color {
+            r: self.r * rhs.r,
+            g: self.g * rhs.g,
+            b: self.b * rhs.g,
+        }
+    }
 }
 
 // Add is intentionally _not implemented_; this is a utility designed for running sums.

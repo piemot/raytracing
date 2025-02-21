@@ -115,6 +115,12 @@ impl<T: NormalizationState> Vec2<T> {
     pub fn dot(&self, rhs: &Vec2) -> f64 {
         self.x * rhs.x + self.y * rhs.y
     }
+
+    /// Returns true if the vector is close to zero (within `1e-8`) in all dimensions.
+    pub fn near_zero(&self) -> bool {
+        const THRESHOLD: f64 = 1e-8;
+        self.x.abs() < THRESHOLD && self.y.abs() < THRESHOLD
+    }
 }
 
 impl Vec2<Unknown> {
