@@ -151,3 +151,7 @@ However, I did fix a bug where the colours indicating the normal vectors off the
 calculated incorrectly.
 
 Functions were refactored to use the Interval struct.
+
+Camera code was refactored into its own struct. Since it's fairly complicated,
+the builder pattern may need to be used later once it grows more complex.
+For now, having some simple initialization functions suffices.

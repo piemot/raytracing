@@ -1,5 +1,8 @@
+pub mod camera;
 pub mod hittable;
 pub mod math;
+
+pub use camera::Camera;
 
 pub use math::point;
 pub use math::point::Point2;
