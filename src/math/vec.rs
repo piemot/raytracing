@@ -197,9 +197,32 @@ impl Vec3<Unknown> {
     pub fn random_in_unit_sphere() -> Vec3 {
         loop {
             let p = Self::random_range(-1.0..=1.0);
-            if p.len_squared() < 1.0 {
+            let len_sq = p.len_squared();
+            // Since floats have finite precision, there is a risk that len_sq is equal to zero.
+            // This would result in an invalid vector when normalized,
+            // so we skip if the length is too small.
+            // If len_sq is greater than 1.0, it is inside the unit cube but outside the unit sphere.
+            if 1.0e-160 < len_sq && len_sq < 1.0 {
                 return p;
             }
+        }
+    }
+
+    /// Return a unit [`Vec3`] to a random point on the edge of the unit sphere.
+    #[inline]
+    pub fn random_unit_vector() -> Vec3<Normalized> {
+        Self::random_in_unit_sphere().as_unit()
+    }
+
+    /// Return a unit [`Vec3`] to a random point on the edge of the same hemisphere as the given normal vector.
+    #[inline]
+    pub fn random_on_hemisphere<T: NormalizationState>(normal: &Vec3<T>) -> Vec3<Normalized> {
+        let on_unit_sphere = Self::random_unit_vector();
+        if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
+            // same hemisphere as the normal
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
         }
     }
 
@@ -231,7 +254,16 @@ impl Vec3<Unknown> {
     }
 }
 
-impl Vec3<Normalized> {}
+impl Vec3<Normalized> {
+    pub fn denormalized(&self) -> Vec3 {
+        Vec3 {
+            x: self.x,
+            y: self.y,
+            z: self.z,
+            normalized: PhantomData,
+        }
+    }
+}
 
 // Vectors can be negated keeping their normalization states.
 impl<T: NormalizationState> Neg for Vec3<T> {
@@ -289,8 +321,24 @@ impl Add<Vec3> for Vec3<Normalized> {
     }
 }
 
+// adding two normalized vectors does not result in a normalized vector
+impl Add<Vec3<Normalized>> for Vec3<Normalized> {
+    type Output = Vec3;
+
+    fn add(self, rhs: Vec3<Normalized>) -> Vec3 {
+        Vec3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            normalized: PhantomData,
+        }
+    }
+}
+
 forward_ref_binop! {impl Add, add for Vec3, Vec3}
 forward_ref_binop! {impl Add, add for Vec3<Normalized>, Vec3}
+forward_ref_binop! {impl Add, add for Vec3, Vec3<Normalized>}
+forward_ref_binop! {impl Add, add for Vec3<Normalized>, Vec3<Normalized>}
 
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {

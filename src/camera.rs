@@ -15,6 +15,8 @@ pub enum AntialiasingType {
 pub struct Camera {
     /// The width, in pixels, of the rendered image
     image_width: u32,
+
+    #[allow(dead_code)]
     /// The **true** aspect ratio of the camera: should be a ratio of width over height.
     aspect_ratio: f64,
     /// The height, in pixels, of the rendered image. Calculated based on `target_aspect_ratio` and `image_width`.
@@ -34,6 +36,8 @@ pub struct Camera {
     /// A fraction (`0.0..=1.0`) to multiply each sample by for antialiasing.
     /// Should be equal to `1.0 / samples_per_px`.
     px_sample_scale: f64,
+    /// The maximum number of times a ray may bounce in a scene.
+    max_depth: u32,
 }
 
 impl Camera {
@@ -66,6 +70,8 @@ impl Camera {
         let viewport_height = 2.0;
         let viewport_width = viewport_height * aspect_ratio;
         let camera_center = Point3::origin();
+
+        let max_depth = 10;
 
         // |> Viewport Calculations <|
 
@@ -105,6 +111,7 @@ impl Camera {
             antialiasing_type,
             samples_per_px,
             px_sample_scale,
+            max_depth,
         }
     }
 
@@ -124,7 +131,7 @@ impl Camera {
 
                 for _ in 0..self.samples_per_px {
                     let ray = self.get_ray(i, j);
-                    px_color += Self::ray_color(&ray, world);
+                    px_color += Self::ray_color(&ray, self.max_depth, world);
                 }
 
                 px_color.set_brightness(self.px_sample_scale);
@@ -151,10 +158,18 @@ impl Camera {
         Ray3::new(self.camera_center, ray_direction)
     }
 
-    fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {
-        if let Some(hit) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
-            let color_vec = 0.5 * (hit.normal() + Vec3::new(1.0, 1.0, 1.0));
-            return Color::from_vec3(&color_vec);
+    fn ray_color(ray: &Ray3, depth: u32, world: &impl Hittable) -> Color {
+        if depth <= 0 {
+            // Exceeded the bounce depth limit :(
+            return Color::black();
+        }
+
+        if let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
+            let direction = hit.normal() + Vec3::random_unit_vector();
+            let mut bounce_color =
+                Camera::ray_color(&Ray3::new(hit.point(), direction), depth - 1, world);
+            bounce_color.set_brightness(0.5);
+            return bounce_color;
         }
 
         // "sky" colouring

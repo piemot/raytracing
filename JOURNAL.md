@@ -179,3 +179,39 @@ I'll just stick to square for now for its simplicity.
 Also, effects are definitely noticable at 100 samples compared to 10, but the 10x speed increase is
 much more valuble to me on a MacBook. For development, I'll probably keep a very low sampling value
 or disable antialiasing entirely.
+
+### Ray Bouncing
+
+Finally, the rays actually start being traced! Each time a ray bounces (in a random direction in a hemisphere
+off the normal), the brightness it impacts the pixel is reduced by 1/2. So we don't end up with recursions
+causing a stack overflow, rays end as black at 10 bounces.
+
+This makes the balls a nice grey-blue colour; the blue is reflected from the sky!
+
+[assets/raybouncing.ppm](assets/raybouncing.ppm)
+
+### Lambertian Distribution
+
+Unfortunately, physics doesn't behave in a simple way. There's a probablility to
+where a ray will be reflected off a diffuse (matte) surface, and it's roughly described 
+by the [Lambertian Distribution](https://en.wikipedia.org/wiki/Lambertian_reflectance):
+
+$B_D=\mathbf{L} \cdot \mathbf {N} CI_{\text{L}}$
+
+This is the dot product of the surface's normal vector 
+$\mathbf{N}$ and a light vector $\mathbf{L}$, multiplied by the color 
+and intensity of the light hitting the surface.
+
+In other words, the distribution follows Lambert's Cosine Law: that radiant 
+intensity is the same from all angles of observance. The intensity of a reflected
+beam is based on its angle compared to the normal of the surface.
+
+Math-heavy side note over, this doesn't make much of a difference for the simple scene here.
+It really helps to emphasize shadows, though, and is a much more accurate simulation.
+
+[assets/lambertian.ppm](assets/lambertian.ppm)
+
+> *I increased the `samples_per_px` value for the Lambertian 
+> distrbution demo so we can see a nice image.*
+> 
+> *On my machine, this took nearly a minute to render.*
