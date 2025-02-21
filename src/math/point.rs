@@ -159,8 +159,8 @@ pub struct Point2 {
 impl Point2 {
     /// Create a new Point2.
     /// ```
-    /// use crate::Point2;
-    /// let pt = Point3::new(3.0, 1.0);
+    /// use raytracing::Point2;
+    /// let pt = Point2::new(3.0, 1.0);
     /// ```
     pub fn new(x: f64, y: f64) -> Self {
         Point2 { x, y }

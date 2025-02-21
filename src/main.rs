@@ -1,7 +1,7 @@
 use raytracing::{
     color::write_color,
     hittable::{HittableVec, Sphere},
-    Color, Hittable, Point3, Ray3, Vec2, Vec3,
+    Color, Hittable, Interval, Point3, Ray3, Vec2, Vec3,
 };
 use std::io;
 
@@ -85,7 +85,7 @@ fn main() {
 }
 
 fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {
-    if let Some(hit) = world.hit(ray, 0.0, f64::INFINITY) {
+    if let Some(hit) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
         let color_vec = 0.5 * (hit.normal() + &Vec3::new(1.0, 1.0, 1.0));
         return Color::from_vec3(&color_vec);
     }

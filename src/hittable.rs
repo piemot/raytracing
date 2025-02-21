@@ -1,4 +1,4 @@
-use crate::{vec::Normalized, Point3, Ray3, Vec3};
+use crate::{vec::Normalized, Interval, Point3, Ray3, Vec3};
 
 #[derive(Debug, Clone)]
 pub struct HitRecord {
@@ -52,7 +52,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray3, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord>;
 }
 
 pub struct Sphere {
@@ -67,7 +67,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray3, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.direction().len_squared();
         let h = Vec3::dot(&ray.direction(), &oc);
@@ -82,9 +82,9 @@ impl Hittable for Sphere {
 
         // Find the nearest root that lies in the acceptable range.
         let root = (h - sqrtd) / a;
-        if root <= ray_tmin || ray_tmax <= root {
+        if !ray_t.surrounds(root) {
             let root = (h + sqrtd) / a;
-            if root <= ray_tmin || ray_tmax <= root {
+            if !ray_t.surrounds(root) {
                 return None;
             }
         }
@@ -113,12 +113,12 @@ impl<'a> HittableVec<'a> {
 }
 
 impl Hittable for HittableVec<'_> {
-    fn hit(&self, ray: &Ray3, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord> {
         let mut closest_record: Option<HitRecord> = None;
-        let mut closest_dist = ray_tmax;
+        let mut closest_dist = *ray_t.end();
 
         for object in &self.objects {
-            if let Some(record) = object.hit(ray, ray_tmin, closest_dist) {
+            if let Some(record) = object.hit(ray, Interval::new(*ray_t.start(), closest_dist)) {
                 closest_dist = record.t;
                 closest_record = Some(record);
             }

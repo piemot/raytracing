@@ -144,3 +144,10 @@ For now, if it has, we'll render it in a color describing the normal vector off 
 The `Hittable` trait describes an object or a body that can be hit. 
 Currently, only `Sphere`s can be hit, but other objects will be added later.
 
+## Feb 20
+
+I've been sick for the last few days, so not much progress has been made.
+However, I did fix a bug where the colours indicating the normal vectors off the sphere were
+calculated incorrectly.
+
+Functions were refactored to use the Interval struct.

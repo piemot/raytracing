@@ -2,6 +2,7 @@ pub mod hittable;
 pub mod math;
 
 pub use math::point;
+pub use math::point::Point2;
 pub use math::point::Point3;
 
 pub use math::vec;
