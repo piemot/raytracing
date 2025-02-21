@@ -215,3 +215,47 @@ It really helps to emphasize shadows, though, and is a much more accurate simula
 > distrbution demo so we can see a nice image.*
 > 
 > *On my machine, this took nearly a minute to render.*
+
+### Gamma Correction
+
+Time to turn gamma correction back on! Now that we can demonstrate with reflectance,
+it's a lot clearer why it's required. These images are both rendered with bands where
+the objects have a reflectance of `10%`, `30%`, `50%`, `70%`, and `90%`.
+
+Using a colour picker, the colour of the ground in the `10%` slice has a value of `#0e1218`.
+The slice at `50%` is `#344155`, and the 90% slice is `#83a9e1`.
+
+HSL (hue, saturation, and lightness) is a color field useful for evaulating how light a colour is.
+It can be easily converted to from RGB as $\frac{(C_{max} + C_{min})}{2}$, where $C_{max}$ is the most significant
+colour value of red, green, and blue, and $C_{min}$ is the least significant value.
+
+Using these lightness values, we can take a look at this table:
+
+| Reflectance   | Color (RGB) | Original Lightness (HSL) |
+|--------------:|-------------|--------------------------|
+| 10%           | `#0e1218`   | 7%                       |
+| 30%           | `#202a38`   | 17%                      |
+| 50%           | `#344155`   | 27%                      |
+| 70%           | `#5b7398`   | 48%                      |
+| 90%           | `#83a9e1`   | 70%                      |
+
+Huh. That doesn't seem very linear - halfway between 10% and 90% should be 50% lightness, not 70%!
+
+Gamma encoding is used to make sure that we don't waste bits distingushing between colours that **humans** can't see.
+In order to convert from linear to gamma-2 encoding, we just need to square root each colour value.
+
+This leaves us with this improved table:
+
+| Reflectance   | Original Lightness (HSL) | Gamma-Corrected Lightness (HSL) |
+|--------------:|--------------------------|---------------------------------|
+| 10%           | 7%                       | 26%                             |
+| 30%           | 17%                      | 41%                             |
+| 50%           | 27%                      | 47%                             |
+| 70%           | 48%                      | 67%                             |
+| 90%           | 70%                      | 83%                             |
+
+Much more even. See the images these numbers came from here:
+
+**[Original](assets/gamma-0.ppm)**
+
+**[Gamma-Corrected](assets/gamma-1.ppm)**
