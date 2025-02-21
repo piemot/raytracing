@@ -83,22 +83,11 @@ fn main() {
         }
     }
 }
-/*
-color ray_color(const ray& r, const hittable& world) {
-    hit_record rec;
-    if (world.hit(r, 0, infinity, rec)) {
-        return 0.5 * (rec.normal + color(1,1,1));
-    }
-
-    vec3 unit_direction = unit_vector(r.direction());
-    auto a = 0.5*(unit_direction.y() + 1.0);
-    return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
-} */
 
 fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {
     if let Some(hit) = world.hit(ray, 0.0, f64::INFINITY) {
-        let half_normal: Vec3 = hit.normal() * 0.5;
-        return Color::from_vec3(&(half_normal + Vec3::new(1.0, 1.0, 1.0)));
+        let color_vec = 0.5 * (hit.normal() + &Vec3::new(1.0, 1.0, 1.0));
+        return Color::from_vec3(&color_vec);
     }
 
     // "sky" colouring
@@ -108,20 +97,6 @@ fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {
     let whiteness = Vec3::new(1.0, 1.0, 1.0) * (1.0 - intensity);
     let coloring = Vec3::new(0.5, 0.7, 1.0) * intensity;
 
-    Color::from_vec3(&(whiteness + coloring))
+    let color_vec = whiteness + coloring;
+    Color::from_vec3(&color_vec)
 }
-/*
-fn hit_sphere(center: &Point3, radius: f64, ray: &Ray3) -> Option<f64> {
-    let oc = center - ray.origin();
-    let a = ray.direction().len_squared();
-    let h = Vec3::dot(&ray.direction(), &oc);
-    let c = oc.len_squared() - radius * radius;
-    let disc = h * h - a * c;
-
-    if disc < 0.0 {
-        None
-    } else {
-        Some((h - disc.sqrt()) / a)
-    }
-}
- */

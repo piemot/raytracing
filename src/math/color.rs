@@ -1,6 +1,8 @@
 use crate::{Interval, Vec3};
 use std::fmt::Display;
 
+use super::vec::normal::NormalizationState;
+
 /// Represents an RGB color with 3 floats, ranging from `(0.0, 0.0, 0.0)` (black) to `(1.0, 1.0, 1.0)` (white).
 /// Invalid colors (colors outside the `0.0..=1.0` range) may be constructed; check [`Color::is_valid()`]
 /// if a color must be valid.
@@ -101,7 +103,7 @@ impl Color {
     /// To create a valid color, each axis the [`Vec3`] should range from `0.0..=1.0`.
     /// This can most easily be accomplished by normalizing the vector. However,
     /// this function will accept vectors that produce invalid colors.
-    pub fn from_vec3(vec: &Vec3) -> Self {
+    pub fn from_vec3<T: NormalizationState>(vec: &Vec3<T>) -> Self {
         Self::new(vec.x(), vec.y(), vec.z())
     }
 }

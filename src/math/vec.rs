@@ -234,6 +234,7 @@ impl Vec3<Unknown> {
 
 impl Vec3<Normalized> {}
 
+// Vectors can be negated keeping their normalization states.
 impl<T: NormalizationState> Neg for Vec3<T> {
     type Output = Vec3<T>;
 
@@ -249,6 +250,7 @@ impl<T: NormalizationState> Neg for Vec3<T> {
 
 forward_ref_unop! {impl Neg, neg for Vec3}
 
+// However, they lose their normalization state when added or subtracted.
 impl Add for Vec3 {
     type Output = Vec3;
 
@@ -262,7 +264,34 @@ impl Add for Vec3 {
     }
 }
 
+impl Add<Vec3<Normalized>> for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: Vec3<Normalized>) -> Vec3 {
+        Vec3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            normalized: PhantomData,
+        }
+    }
+}
+
+impl Add<Vec3> for Vec3<Normalized> {
+    type Output = Vec3;
+
+    fn add(self, rhs: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+            normalized: PhantomData,
+        }
+    }
+}
+
 forward_ref_binop! {impl Add, add for Vec3, Vec3}
+forward_ref_binop! {impl Add, add for Vec3<Normalized>, Vec3}
 
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
@@ -273,12 +302,21 @@ impl AddAssign for Vec3 {
 impl Sub for Vec3 {
     type Output = Vec3;
 
-    fn sub(self, rhs: Self) -> Self {
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.add(-rhs)
+    }
+}
+
+impl Sub<Vec3> for Vec3<Normalized> {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Vec3) -> Vec3 {
         self.add(-rhs)
     }
 }
 
 forward_ref_binop! {impl Sub, sub for Vec3, Vec3}
+forward_ref_binop! {impl Sub, sub for Vec3<Normalized>, Vec3}
 
 impl SubAssign for Vec3 {
     fn sub_assign(&mut self, rhs: Self) {
