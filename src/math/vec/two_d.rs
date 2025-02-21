@@ -81,11 +81,7 @@ impl<N: NormalizationState> PartialEq for Vec2<N> {
 // and https://github.com/rust-lang/rust/issues/26925.
 impl<T: NormalizationState> Clone for Vec2<T> {
     fn clone(&self) -> Vec2<T> {
-        Vec2 {
-            x: self.x,
-            y: self.y,
-            normalized: PhantomData,
-        }
+        *self
     }
 }
 
@@ -157,6 +153,9 @@ impl Vec2<Unknown> {
     /// Create a new Vec2, pointing in a random direction where each axis is randomly sampled
     /// from a [`Uniform`] distribution over the provided range.
     ///
+    /// # Panics
+    /// May panic if the `range` provided cannot be parsed into a [`rand::distr::Uniform<f64>`].
+    ///
     /// [`Uniform`]: rand::distr::Uniform
     pub fn random_range(range: impl TryInto<rand::distr::Uniform<f64>>) -> Vec2 {
         let mut rng = rand::rng();
@@ -165,7 +164,7 @@ impl Vec2<Unknown> {
         // to work due to vague errors about requiring `From<T>` impls.
         let distr: rand::distr::Uniform<f64> = range
             .try_into()
-            .map_err(|_| format!("Invalid `range` provided to Vec2::random_range"))
+            .map_err(|_| "Invalid `range` provided to Vec2::random_range")
             .unwrap();
         let x = distr.sample(&mut rng);
         let y = distr.sample(&mut rng);

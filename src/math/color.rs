@@ -8,6 +8,7 @@ use super::vec::normal::NormalizationState;
 /// if a color must be valid.
 /// Alternatively, the color can be clamped when converting to RGB with [`Color::as_rgb_ints()`].
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[must_use]
 pub struct Color {
     r: f64,
     g: f64,
@@ -137,5 +138,5 @@ impl Display for Color {
 
 pub fn write_color(out: &mut impl std::io::Write, color: &Color) {
     let [r, g, b] = color.as_rgb_ints();
-    write!(out, "{r} {g} {b}\n").unwrap();
+    writeln!(out, "{r} {g} {b}").unwrap();
 }

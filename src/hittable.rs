@@ -31,7 +31,7 @@ impl HitRecord {
         normal: &Vec3<Normalized>,
         t: f64,
     ) -> Self {
-        let front_face = Vec3::dot(&ray.direction(), &normal) < 0.0;
+        let front_face = Vec3::dot(&ray.direction(), normal) < 0.0;
         let normal = if front_face { *normal } else { -*normal };
         Self {
             point: *point,
@@ -51,10 +51,11 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: std::fmt::Debug {
     fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord>;
 }
 
+#[derive(Debug)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
@@ -96,6 +97,7 @@ impl Hittable for Sphere {
     }
 }
 
+#[derive(Debug, Default)]
 pub struct HittableVec<'a> {
     objects: Vec<&'a dyn Hittable>,
 }

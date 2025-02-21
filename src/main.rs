@@ -65,7 +65,7 @@ fn main() {
     world.add(&a);
 
     // header
-    print!("P3\n{} {}\n255\n", image_width, image_height);
+    print!("P3\n{image_width} {image_height}\n255\n");
 
     let mut stdout = io::stdout().lock();
     for j in 0..image_height {
@@ -86,7 +86,7 @@ fn main() {
 
 fn ray_color(ray: &Ray3, world: &impl Hittable) -> Color {
     if let Some(hit) = world.hit(ray, Interval::new(0.0, f64::INFINITY)) {
-        let color_vec = 0.5 * (hit.normal() + &Vec3::new(1.0, 1.0, 1.0));
+        let color_vec = 0.5 * (hit.normal() + Vec3::new(1.0, 1.0, 1.0));
         return Color::from_vec3(&color_vec);
     }
 

@@ -20,6 +20,7 @@ use std::{
 /// [`Point3`]: crate::Point3
 ///
 #[derive(Debug, PartialEq, Clone, Copy, Default)]
+#[must_use]
 pub struct Point3 {
     x: f64,
     y: f64,
