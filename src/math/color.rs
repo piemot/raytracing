@@ -119,7 +119,7 @@ impl Color {
         Color {
             r: self.r * rhs.r,
             g: self.g * rhs.g,
-            b: self.b * rhs.g,
+            b: self.b * rhs.b,
         }
     }
 }
