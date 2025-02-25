@@ -9,8 +9,8 @@ fn main() {
 
     let mat_ground: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
     let mat_center: Box<dyn Material> = Box::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let mat_left: Box<dyn Material> = Box::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
-    let mat_right: Box<dyn Material> = Box::new(Metal::new(Color::new(0.8, 0.6, 0.2)));
+    let mat_left: Box<dyn Material> = Box::new(Metal::with_fuzz(Color::new(0.8, 0.8, 0.8), 0.3));
+    let mat_right: Box<dyn Material> = Box::new(Metal::with_fuzz(Color::new(0.8, 0.6, 0.2), 1.0));
 
     let mut world = HittableVec::new();
     let a = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &*mat_ground);

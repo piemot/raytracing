@@ -271,3 +271,40 @@ struct that impls it. While we're at it, let's create a second material: reflect
 With simple specular reflection from a polished metal, the angle of incidence $theta_i$ is equal
 to the angle of reflection, $theta_r$, when both are measured from the normal of the surface.
 This reflected ray is equal to $V - 2N (V \cdot N)$.
+
+## Feb 25
+
+### Debugging
+
+After creating that metal, I set up a test scene:
+
+[metal-bug.ppm](assets/metal-bug.ppm)
+
+Something seems off, though. The right-hand sphere looks okay, but what's going on with the left sphere?
+That doesn't look like it's properly reflecting - it's super tinted!
+
+The issue turned out to be a single line of code: 
+
+```diff
+- b: self.b * rhs.g,
++ b: self.b * rhs.b,
+```
+
+Can you see the error? The blue channel was being influenced by the green channel when two colours were
+combined. The correct image looks like this: 
+
+[metal-fix.ppm](assets/metal-fix.ppm)
+
+### Fuzziness
+
+We can simulate perfectly smooth metal, but what about metal that doesn't reflect perfectly?
+Surfaces with imperfections - in other words, fuzziness?
+
+After reflecting using a perfect metal simulation, we can add a little nudge to where the ray
+actually ends up. This is an easy way to simulate fuzziness.
+
+![Fuzziness in metals](assets/02-25-fuzz.svg)
+
+**[fuzzy.ppm](assets/fuzzy.ppm)**
+
+

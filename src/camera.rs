@@ -97,7 +97,7 @@ impl Camera {
         // |> Antialiasing <|
 
         let antialiasing_type = AntialiasingType::Square;
-        let samples_per_px = 10;
+        let samples_per_px = 50;
         let px_sample_scale = 1.0 / f64::from(samples_per_px);
 
         Self {
