@@ -1,4 +1,4 @@
-use crate::math::macros::{forward_ref_binop, forward_ref_unop};
+use crate::math::macros::forward_ref_binop;
 use rand::distr::Distribution;
 use std::{
     fmt::Display,
@@ -267,7 +267,17 @@ impl Vec3<Unknown> {
     }
 }
 
-impl Vec3<Normalized> {}
+impl Vec3<Normalized> {
+    /// Refracts this normalized vector, given the normal vector of the surface and
+    /// the ratio of refractive indices [η / η′].
+    pub fn refract(&self, normal: &Vec3<Normalized>, index_ratio: f64) -> Vec3 {
+        let cos_theta = (-self).dot(normal).min(1.0);
+        let rayout_perpendicular = index_ratio * (self + (cos_theta * normal));
+        let rayout_parallel = -(1.0 - rayout_perpendicular.len_squared()).abs().sqrt() * normal;
+
+        rayout_perpendicular + rayout_parallel
+    }
+}
 
 // Vectors can be negated keeping their normalization states.
 impl<T: NormalizationState> Neg for Vec3<T> {
@@ -283,7 +293,13 @@ impl<T: NormalizationState> Neg for Vec3<T> {
     }
 }
 
-forward_ref_unop! {impl Neg, neg for Vec3}
+impl<'a, T: NormalizationState> Neg for &'a Vec3<T> {
+    type Output = <Vec3<T> as Neg>::Output;
+    #[inline]
+    fn neg(self) -> <Vec3<T> as Neg>::Output {
+        Neg::neg(*self)
+    }
+}
 
 // However, they lose their normalization state when added or subtracted.
 impl Add for Vec3 {
@@ -481,6 +497,7 @@ impl From<Vec3<Normalized>> for Vec3 {
         }
     }
 }
+
 impl From<Vec3> for Vec3<Normalized> {
     fn from(value: Vec3) -> Self {
         Vec3 {

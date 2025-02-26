@@ -94,9 +94,9 @@ impl Hittable for Sphere<'_> {
         let sqrtd = discriminant.sqrt();
 
         // Find the nearest root that lies in the acceptable range.
-        let root = (h - sqrtd) / a;
+        let mut root = (h - sqrtd) / a;
         if !ray_t.surrounds(root) {
-            let root = (h + sqrtd) / a;
+            root = (h + sqrtd) / a;
             if !ray_t.surrounds(root) {
                 return None;
             }

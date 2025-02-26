@@ -268,8 +268,8 @@ So far, the material an object is made of has been hardcoded in the `Camera::ray
 To assign different objects different materials, we need to create a `Material` trait and a `Lambertian`
 struct that impls it. While we're at it, let's create a second material: reflective metal.
 
-With simple specular reflection from a polished metal, the angle of incidence $theta_i$ is equal
-to the angle of reflection, $theta_r$, when both are measured from the normal of the surface.
+With simple specular reflection from a polished metal, the angle of incidence $\theta_i$ is equal
+to the angle of reflection, $\theta_r$, when both are measured from the normal of the surface.
 This reflected ray is equal to $V - 2N (V \cdot N)$.
 
 ## Feb 25
@@ -307,4 +307,41 @@ actually ends up. This is an easy way to simulate fuzziness.
 
 **[fuzzy.ppm](assets/fuzzy.ppm)**
 
+### Dielectric Materials
 
+**What are dielectric materials?**
+<details>
+"Dielectric" mediums are materials that respond to a polarizing electric field. 
+Since light is an electric field, the medium oscillates at an atomic level when the light passes through.
+These oscillations produce their own electric fields, which interfere via Maxwell's equations to
+form a wave with the same frequency and a different (usually shorter) wavelength. 
+
+> [More](https://www.reddit.com/r/askscience/comments/3izy8j/comment/cum0ktg)
+> [details](https://en.wikipedia.org/wiki/Maxwell%27s_equations#Vacuum_equations,_electromagnetic_waves_and_speed_of_light)
+</details>
+
+When a light ray hits a dielectric, it may split into two rays: a **reflected** ray and a **refracted** ray.
+A **reflected** ray is a ray that bounces off the surface, just like the rays that have been simulated so far.
+A **refracted** ray is a ray that continues through the surface. However, due to the change in speed a dielectric
+medium imposes, refracted rays typically change their angle as they pass through the object's surface -
+like how a rod appears to bend when inserted into water, or how a glass lens flips an image upside-down.
+
+> **Note**: because we send several rays through each pixel, it's not necessary to simulate splitting the ray.
+> Instead, we select with a given probablility whether that ray becomes reflected or refracted.
+> This ensures that we always have a constant number of rays travelling through the scene.
+
+Refraction is described by [Snell's Law](https://en.wikipedia.org/wiki/Snell%27s_law),
+$\eta \cdot sin \theta = \eta^\prime \cdot sin \theta^\prime$, 
+where $\theta$ and $\theta^\prime$ are the angles from the normal, 
+and $\eta$ and $\eta^\prime$ are the refractive indices/coefficients.
+
+Ray Tracing in One Weekend goes into [more detail](https://raytracing.github.io/books/RayTracingInOneWeekend.html#dielectrics/snell'slaw),
+but eventually this equation can be used to determine the refracted ray $R^\prime$ from an incoming
+ray $R$ and the ratio of refractive indices, $\frac{\eta}{\eta^\prime}$.
+
+At certain angles, dielectrics are forced to reflect instead of refracting because Snell's law
+no longer has a solution.
+
+This image has a glass ball which contains a bubble of air.
+
+**[glass.ppm](./assets/glass.ppm)**
