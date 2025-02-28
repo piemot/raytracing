@@ -162,7 +162,7 @@ impl Vec3<Unknown> {
     }
 
     /// Reflects this vector with the normal vector of the surface.
-    /// Assumes perfect specular reflection: θ_in = θ_out.
+    /// Assumes perfect specular reflection: `θ_in` = `θ_out`.
     pub fn reflect(&self, normal: &Vec3<Normalized>) -> Vec3 {
         let mul = 2.0 * Vec3::dot(self, normal);
         *self - normal * mul
@@ -293,7 +293,7 @@ impl<T: NormalizationState> Neg for Vec3<T> {
     }
 }
 
-impl<'a, T: NormalizationState> Neg for &'a Vec3<T> {
+impl<T: NormalizationState> Neg for &Vec3<T> {
     type Output = <Vec3<T> as Neg>::Output;
     #[inline]
     fn neg(self) -> <Vec3<T> as Neg>::Output {

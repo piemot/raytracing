@@ -4,6 +4,7 @@ use crate::{
 use std::io;
 
 #[derive(Debug)]
+#[must_use]
 pub struct CameraBuilder {
     /// The width, in pixels, of the rendered image
     image_width: u32,
@@ -261,7 +262,7 @@ impl Camera {
             camera_center - (focal_length * w) - viewport_u / 2.0 - viewport_v / 2.0;
 
         // The point (in 3d space) of the centre of the top-left pixel.
-        let pixel_00 = viewport_corner + Vec3::from((pxdelta_u + pxdelta_v) / 2.0);
+        let pixel_00 = viewport_corner + (pxdelta_u + pxdelta_v) / 2.0;
 
         // The radius of the disk that rays are projected from.
         let defocus_radius = focal_length * f64::tan(defocus_angle / 2.0);
@@ -272,9 +273,9 @@ impl Camera {
         let px_sample_scale = 1.0 / f64::from(samples_per_px);
 
         Self {
-            camera_center,
-            image_height,
             image_width,
+            image_height,
+            camera_center,
             pixel_00,
             pxdelta_u,
             pxdelta_v,
@@ -324,8 +325,8 @@ impl Camera {
         // px_sample is equal to the center of the pixel (offset in the 3d plane by 2d vectors i(Δu) and j(Δv))
         // plus the random vector of `offset`.
         let px_sample = self.pixel_00
-            + Vec3::from((f64::from(i) + offset.x()) * self.pxdelta_u)
-            + Vec3::from((f64::from(j) + offset.y()) * self.pxdelta_v);
+            + (f64::from(i) + offset.x()) * self.pxdelta_u
+            + (f64::from(j) + offset.y()) * self.pxdelta_v;
 
         let ray_origin = if self.defocus_angle <= 0.0 {
             self.camera_center
@@ -338,7 +339,7 @@ impl Camera {
     }
 
     fn ray_color(ray: &Ray3, depth: u32, world: &impl Hittable) -> Color {
-        if depth <= 0 {
+        if depth == 0 {
             // Exceeded the bounce depth limit :(
             return Color::black();
         }

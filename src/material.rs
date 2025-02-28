@@ -35,10 +35,10 @@ impl Material for Lambertian {
 
         let scattered = Ray3::new(record.point(), scatter_direction);
 
-        return Some(MaterialResult {
+        Some(MaterialResult {
             attenuation: self.albedo,
             scattered,
-        });
+        })
     }
 }
 

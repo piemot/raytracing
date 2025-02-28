@@ -21,13 +21,11 @@ impl Color {
     /// use raytracing::Color;
     /// let green = Color::new(0.0, 1.0, 1.0);
     /// ```
-    #[must_use]
     pub const fn new(r: f64, g: f64, b: f64) -> Self {
         Self { r, g, b }
     }
 
     /// Create a new Color repesenting black.
-    #[must_use]
     pub const fn black() -> Self {
         Self {
             r: 0.0,
@@ -37,7 +35,6 @@ impl Color {
     }
 
     /// Create a new Color repesenting white.
-    #[must_use]
     pub const fn white() -> Self {
         Self {
             r: 1.0,
@@ -81,7 +78,6 @@ impl Color {
         self.b
     }
 
-    #[must_use]
     /// Returns this color as a gamma-corrected color.
     pub fn as_gamma_corrected(&self) -> Self {
         Self {
