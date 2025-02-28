@@ -357,3 +357,22 @@ The focal plane is in the same plane as the viewport, and the rays fired from th
 on that viewport. 
 
 **[dynamic-cam.ppm](./assets/dynamic-cam.ppm)**
+
+## Feb 27
+
+After finishing implementing everything noted above, we're done with Ray Tracing in One Weekend!
+This is a fully functional ray tracer - albeit a bit of a slow and limited one.
+
+Let's render a relatively complicated test scene, with a lot of randomly generated spheres.
+
+**[render-1.ppm](./assets/render-1.ppm)**
+
+Does it look cool? **Yes!**
+
+Does it seem to work? **Yes!**
+
+Did it take twenty minutes to render? **ye-wait, what?**
+
+![A screenshot showing a 17-minute long terminal process](assets/oops.png)
+
+*oops*. Well, that's a problem for another day.
