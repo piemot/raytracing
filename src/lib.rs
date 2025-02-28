@@ -3,7 +3,9 @@ pub mod hittable;
 pub mod material;
 pub mod math;
 
-pub use camera::Camera;
+pub use camera::{AntialiasingType, Camera, CameraBuilder};
+
+pub use hittable::{HitRecord, Hittable};
 
 pub use material::Material;
 
@@ -24,5 +26,3 @@ pub use math::color::Color;
 
 pub use math::ray;
 pub use math::ray::Ray3;
-
-pub use hittable::{HitRecord, Hittable};

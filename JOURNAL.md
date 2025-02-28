@@ -345,3 +345,15 @@ no longer has a solution.
 This image has a glass ball which contains a bubble of air.
 
 **[glass.ppm](./assets/glass.ppm)**
+
+### Camera definitions
+
+Some good features for a camera would be:
+- An adjustable FOV (field of view): the angle at which the camera sends out rays
+- An adjustable origin position (although `(0, 0, 0)` is probably a good default)
+- A depth of field / focal distance: real cameras are only focused at a certain distance.
+We can simulate that by firing rays from across a disc, instead of from a singular point.
+The focal plane is in the same plane as the viewport, and the rays fired from the disc converge
+on that viewport. 
+
+**[dynamic-cam.ppm](./assets/dynamic-cam.ppm)**
