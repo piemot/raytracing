@@ -387,7 +387,7 @@ for twenty minutes. A progress bar would be a useful feature to have.
 
 Rust has a great library for this: [Indicatif](https://docs.rs/indicatif/latest/indicatif/).
 
-![A screenshot showing a progress bar](assets/progress.png)
+![A screenshot showing a progress bar](assets/progressbar.png)
 
 This looks great, and it's easy to implement. I only needed five lines of code.
 When we eventually use [rayon](https://docs.rs/rayon/latest/rayon/) for multithreading,
