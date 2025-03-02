@@ -188,7 +188,7 @@ causing a stack overflow, rays end as black at 10 bounces.
 
 This makes the balls a nice grey-blue colour; the blue is reflected from the sky!
 
-[assets/raybouncing.ppm](assets/raybouncing.ppm)
+![Rays are bounced onto a sphere, tinted blue from the sky](assets/raybouncing.png)
 
 ### Lambertian Distribution
 
@@ -209,7 +209,7 @@ beam is based on its angle compared to the normal of the surface.
 Math-heavy side note over, this doesn't make much of a difference for the simple scene here.
 It really helps to emphasize shadows, though, and is a much more accurate simulation.
 
-[assets/lambertian.ppm](assets/lambertian.ppm)
+![The previous scene, rendered with a Lambertian distribution instead of a purely random hemispherical one](assets/lambertian.png)
 
 > *I increased the `samples_per_px` value for the Lambertian 
 > distrbution demo so we can see a nice image.*
@@ -221,6 +221,8 @@ It really helps to emphasize shadows, though, and is a much more accurate simula
 Time to turn gamma correction back on! Now that we can demonstrate with reflectance,
 it's a lot clearer why it's required. These images are both rendered with bands where
 the objects have a reflectance of `10%`, `30%`, `50%`, `70%`, and `90%`.
+
+![A scene rendered in vertical reflectance strips, without gamma correction](assets/gamma-0.png)
 
 Using a colour picker, the colour of the ground in the `10%` slice has a value of `#0e1218`.
 The slice at `50%` is `#344155`, and the 90% slice is `#83a9e1`.
@@ -241,8 +243,10 @@ Using these lightness values, we can take a look at this table:
 
 Huh. That doesn't seem very linear - halfway between 10% and 90% should be 50% lightness, not 70%!
 
-Gamma encoding is used to make sure that we don't waste bits distingushing between colours that **humans** can't see.
+Gamma encoding is used to make sure that we don't waste bits distingushing between colours that humans can't see.
 In order to convert from linear to gamma-2 encoding, we just need to square root each colour value.
+
+![A scene rendered in vertical reflectance strips, with gamma correction this time](assets/gamma-1.png)
 
 This leaves us with this improved table:
 
@@ -254,11 +258,7 @@ This leaves us with this improved table:
 | 70%           | 48%                      | 67%                             |
 | 90%           | 70%                      | 83%                             |
 
-Much more even. See the images these numbers came from here:
-
-**[Original](assets/gamma-0.ppm)**
-
-**[Gamma-Corrected](assets/gamma-1.ppm)**
+Much more even!
 
 ## Feb 21
 
@@ -278,7 +278,7 @@ This reflected ray is equal to $V - 2N (V \cdot N)$.
 
 After creating that metal, I set up a test scene:
 
-[metal-bug.ppm](assets/metal-bug.ppm)
+![A scene with metal spheres, in wihch something is wrong](assets/metal-bug.png)
 
 Something seems off, though. The right-hand sphere looks okay, but what's going on with the left sphere?
 That doesn't look like it's properly reflecting - it's super tinted!
@@ -293,7 +293,7 @@ The issue turned out to be a single line of code:
 Can you see the error? The blue channel was being influenced by the green channel when two colours were
 combined. The correct image looks like this: 
 
-[metal-fix.ppm](assets/metal-fix.ppm)
+![The fixed version of the previous scene](assets/metal-fix.png)
 
 ### Fuzziness
 
@@ -305,7 +305,7 @@ actually ends up. This is an easy way to simulate fuzziness.
 
 ![Fuzziness in metals](assets/02-25-fuzz.svg)
 
-**[fuzzy.ppm](assets/fuzzy.ppm)**
+![Fuzzy metal spheres](assets/fuzzy.png)
 
 ### Dielectric Materials
 
@@ -344,7 +344,7 @@ no longer has a solution.
 
 This image has a glass ball which contains a bubble of air.
 
-**[glass.ppm](./assets/glass.ppm)**
+![A rendering with a glass ball, containing an air bubble inside it.](assets/glass.png)
 
 ### Camera definitions
 
@@ -356,7 +356,7 @@ We can simulate that by firing rays from across a disc, instead of from a singul
 The focal plane is in the same plane as the viewport, and the rays fired from the disc converge
 on that viewport. 
 
-**[dynamic-cam.ppm](./assets/dynamic-cam.ppm)**
+![A similar scene, displaying a small field of view with the camera backed away from and above the targets](assets/dynamic-cam.png)
 
 ## Feb 27
 
@@ -365,7 +365,7 @@ This is a fully functional ray tracer - albeit a bit of a slow and limited one.
 
 Let's render a relatively complicated test scene, with a lot of randomly generated spheres.
 
-**[render-1.ppm](./assets/render-1.ppm)**
+![A scene with a variety of balls of different types and colours, and demonstrating a slight focal distance effect](assets/render-1.png)
 
 Does it look cool? **Yes!**
 
