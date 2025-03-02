@@ -401,3 +401,6 @@ I even had to install a designated extension.
 The PNG (Portable Network Graphics) format is ubiquitous on the Internet. Since the specifics of
 PNG encoding isn't the focus of this project, I'll use the [image](https://docs.rs/image/latest/image/)
 crate to encode my images.
+
+> I used the [ImageMagick](https://imagemagick.org/index.php) tool to convert my existing PPM
+> files in the assets folder.
