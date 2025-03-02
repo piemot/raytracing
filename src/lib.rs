@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod export;
 pub mod hittable;
 pub mod material;
 pub mod math;

@@ -1,11 +1,13 @@
+use indicatif::{ProgressBar, ProgressStyle};
+
 use crate::{
-    color::write_color, vec::Normalized, Color, Hittable, Interval, Point3, Ray3, Vec2, Vec3,
+    export::ImageWriter, vec::Normalized, Color, Hittable, Interval, Point3, Ray3, Vec2, Vec3,
 };
-use std::io;
+use std::error::Error;
 
 #[derive(Debug)]
 #[must_use]
-pub struct CameraBuilder {
+pub struct CameraBuilder<'a> {
     /// The width, in pixels, of the rendered image
     image_width: u32,
     /// The height, in pixels, of the rendered image.
@@ -31,11 +33,13 @@ pub struct CameraBuilder {
     defocus_angle: f64,
     /// The distance from [`Self::camera_center`] to the plane of perfect focus.
     focal_length: f64,
+    /// The [`ImageWriter`] used for writing the resulting image
+    export_writer: Option<Box<dyn ImageWriter + 'a>>,
 
     errors: Vec<String>,
 }
 
-impl CameraBuilder {
+impl<'a> CameraBuilder<'a> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -140,7 +144,14 @@ impl CameraBuilder {
         self
     }
 
-    pub fn build(self) -> Result<Camera, Vec<String>> {
+    pub fn writer(mut self, writer: Box<dyn ImageWriter + 'a>) -> Self {
+        self.export_writer = Some(writer);
+        self
+    }
+
+    pub fn build(mut self) -> Result<Camera<'a>, Vec<String>> {
+        self.add_error(self.export_writer.is_none(),"build: Missing export format: include the `.writer()` parameter to specify the export format".to_string());
+
         if !self.errors.is_empty() {
             return Err(self.errors);
         }
@@ -148,7 +159,7 @@ impl CameraBuilder {
     }
 }
 
-impl Default for CameraBuilder {
+impl Default for CameraBuilder<'_> {
     fn default() -> Self {
         Self {
             image_width: 400,
@@ -162,6 +173,7 @@ impl Default for CameraBuilder {
             vup: Vec3::new(0.0, 1.0, 0.0).as_unit(),
             defocus_angle: 0.0_f64.to_radians(),
             focal_length: 1.0,
+            export_writer: None,
             errors: Vec::new(),
         }
     }
@@ -178,7 +190,7 @@ pub enum AntialiasingType {
 
 #[derive(Debug)]
 #[must_use]
-pub struct Camera {
+pub struct Camera<'a> {
     /// The width, in pixels, of the rendered image
     image_width: u32,
     /// The height, in pixels, of the rendered image. Calculated based on `target_aspect_ratio` and `image_width`.
@@ -206,10 +218,30 @@ pub struct Camera {
     defocus_disk_u: Vec3,
     /// A vector crossing half the height of the defocus disk.
     defocus_disk_v: Vec3,
+    /// The [`ImageWriter`] used for writing the resulting image
+    export_writer: ImageWriterWrapper<'a>,
+    // export_writer: Box<dyn ImageWriter>,
 }
 
-impl Camera {
-    fn build(builder: CameraBuilder) -> Self {
+/// This Wrapper is used so that the ImageWriter can be borrowed mutably independently of the
+/// rest of the Camera struct. This is necessary in [`Camera::render()`] where [`self.get_ray()`] is
+/// called alongside [`self.write()`].
+#[derive(Debug)]
+struct ImageWriterWrapper<'a>(Box<dyn ImageWriter + 'a>);
+
+// passthrough
+impl ImageWriterWrapper<'_> {
+    fn write_header(&mut self, width: u32, height: u32) -> Result<(), Box<dyn Error>> {
+        self.0.write_header(width, height)
+    }
+
+    fn write(&mut self, colors: &[Color]) -> Result<(), Box<dyn Error>> {
+        self.0.write(colors)
+    }
+}
+
+impl<'a> Camera<'a> {
+    fn build(builder: CameraBuilder<'a>) -> Self {
         // `builder` should be validated before being passed to this function
         assert!(builder.errors.is_empty());
 
@@ -225,7 +257,8 @@ impl Camera {
             max_depth,
             defocus_angle,
             focal_length,
-            ..
+            export_writer,
+            errors: _,
         } = builder;
 
         let fwidth = f64::from(image_width);
@@ -286,19 +319,28 @@ impl Camera {
             defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
+            export_writer: ImageWriterWrapper(export_writer.unwrap()),
         }
     }
 
-    pub fn render(&self, world: &impl Hittable) {
+    pub fn render(&mut self, world: &impl Hittable) {
         let Self {
-            image_width,
-            image_height,
+            ref image_width,
+            ref image_height,
             ..
         } = self;
 
-        println!("P3\n{image_width} {image_height}\n255");
+        let bar = ProgressBar::new((*image_height).into());
+        let style = ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} rows ({per_sec}, {eta})").unwrap().progress_chars("=>-");
+        bar.set_style(style);
 
-        let mut stdout = io::stdout().lock();
+        self.export_writer
+            .write_header(*image_width, *image_height)
+            .unwrap();
+
+        let mut buf: Vec<Color> =
+            Vec::with_capacity((self.image_height * self.image_width).try_into().unwrap());
+
         for j in 0..*image_height {
             for i in 0..*image_width {
                 let mut px_color = Color::black();
@@ -309,9 +351,12 @@ impl Camera {
                 }
 
                 px_color.set_brightness(self.px_sample_scale);
-                write_color(&mut stdout, &px_color);
+                buf.push(px_color);
             }
+            bar.inc(1);
         }
+
+        self.export_writer.write(&buf).unwrap();
     }
 
     /// Constructs a camera [`Ray3`] originating from the camera's `center` and directed at a

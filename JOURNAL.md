@@ -376,3 +376,28 @@ Did it take twenty minutes to render? **ye-wait, what?**
 ![A screenshot showing a 17-minute long terminal process](assets/oops.png)
 
 *oops*. Well, that's a problem for another day.
+
+## Feb 28
+
+### Quality of Life Features
+
+Before moving on to _Ray Tracing: The Next Week_, there are some utility features I want to implement.
+First, it would be nice to have some estimation of when the program is going to complete, when it's running
+for twenty minutes. A progress bar would be a useful feature to have.
+
+Rust has a great library for this: [Indicatif](https://docs.rs/indicatif/latest/indicatif/).
+
+![A screenshot showing a progress bar](assets/progress.png)
+
+This looks great, and it's easy to implement. I only needed five lines of code.
+When we eventually use [rayon](https://docs.rs/rayon/latest/rayon/) for multithreading,
+`indicatif` has a feature that supports multithreaded iterators.
+
+The second feature I want to add is being able to export to a format other than `ppm`.
+The problem with `ppm` is that it isn't supported natively by most image viewers,
+including those that typically render Markdown files. In order to view it in VSCode, 
+I even had to install a designated extension. 
+
+The PNG (Portable Network Graphics) format is ubiquitous on the Internet. Since the specifics of
+PNG encoding isn't the focus of this project, I'll use the [image](https://docs.rs/image/latest/image/)
+crate to encode my images.

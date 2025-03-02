@@ -1,21 +1,25 @@
 use rand::Rng;
 use raytracing::{
     camera::AntialiasingType,
+    export::PngWriter,
     hittable::{HittableVec, Sphere},
     material::{Dielectric, Lambertian, Metal},
     CameraBuilder, Color, Material, Point3,
 };
+use std::io;
 
 fn main() {
-    let cam = CameraBuilder::new()
+    let mut stdout = io::stdout().lock();
+    let mut cam = CameraBuilder::new()
         .with_aspect_ratio(400, 16.0 / 9.0)
         .max_depth(50)
-        .antialias(AntialiasingType::Square, 200)
+        .antialias(AntialiasingType::Square, 10)
         .camera_center(Point3::new(13.0, 2.0, 3.0))
         .camera_target(Point3::origin())
         .vfov(20.0)
         .defocus_angle(0.6)
         .focal_length(10.0)
+        .writer(PngWriter::new(&mut stdout).into_box())
         .build()
         .unwrap();
 
