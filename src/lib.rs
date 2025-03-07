@@ -26,4 +26,4 @@ pub use math::color;
 pub use math::color::Color;
 
 pub use math::ray;
-pub use math::ray::Ray3;
+pub use math::ray::{Ray3, Ray4};

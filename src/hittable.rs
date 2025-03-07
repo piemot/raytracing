@@ -1,4 +1,4 @@
-use crate::{vec::Normalized, Interval, Material, Point3, Ray3, Vec3};
+use crate::{vec::Normalized, Interval, Material, Point3, Ray3, Ray4, Vec3};
 
 #[derive(Debug, Clone)]
 pub struct HitRecord<'a> {
@@ -31,7 +31,7 @@ impl<'a> HitRecord<'a> {
     }
 
     pub fn from_incoming_ray(
-        ray: &Ray3,
+        ray: &Ray4,
         point: &Point3,
         normal: &Vec3<Normalized>,
         t: f64,
@@ -48,7 +48,7 @@ impl<'a> HitRecord<'a> {
         }
     }
 
-    pub fn set_face_normal(&mut self, ray: &Ray3, outward_normal: &Vec3<Normalized>) {
+    pub fn set_face_normal(&mut self, ray: &Ray4, outward_normal: &Vec3<Normalized>) {
         self.front_face = Vec3::dot(&ray.direction(), outward_normal) < 0.0;
         self.normal = if self.front_face {
             *outward_normal
@@ -59,18 +59,28 @@ impl<'a> HitRecord<'a> {
 }
 
 pub trait Hittable: std::fmt::Debug {
-    fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord>;
 }
 
 #[derive(Debug)]
 pub struct Sphere<'a> {
-    center: Point3,
+    center: Ray3,
     radius: f64,
     material: &'a dyn Material,
 }
 
 impl<'a> Sphere<'a> {
-    pub fn new(center: Point3, radius: f64, material: &'a dyn Material) -> Self {
+    pub fn stationary(center: Point3, radius: f64, material: &'a dyn Material) -> Self {
+        assert!(radius >= 0.0);
+        Self {
+            center: Ray3::new(center, Vec3::empty()),
+            radius,
+            material,
+        }
+    }
+
+    pub fn new(center: Ray3, radius: f64, material: &'a dyn Material) -> Self {
+        assert!(radius >= 0.0);
         Self {
             center,
             radius,
@@ -80,8 +90,9 @@ impl<'a> Sphere<'a> {
 }
 
 impl Hittable for Sphere<'_> {
-    fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord> {
-        let oc = self.center - ray.origin();
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
+        let current_center = self.center.at(ray.time());
+        let oc = current_center - ray.origin();
         let a = ray.direction().len_squared();
         let h = Vec3::dot(&ray.direction(), &oc);
         let c = oc.len_squared() - self.radius * self.radius;
@@ -104,7 +115,7 @@ impl Hittable for Sphere<'_> {
 
         let point = ray.at(root);
         // mathematically guaranteed to be normalized
-        let normal = ((point - self.center) / self.radius).assert_is_normalized();
+        let normal = ((point - current_center) / self.radius).assert_is_normalized();
         Some(HitRecord::from_incoming_ray(
             ray,
             &point,
@@ -133,7 +144,7 @@ impl<'a> HittableVec<'a> {
 }
 
 impl Hittable for HittableVec<'_> {
-    fn hit(&self, ray: &Ray3, ray_t: Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
         let mut closest_record: Option<HitRecord> = None;
         let mut closest_dist = *ray_t.end();
 

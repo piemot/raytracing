@@ -404,3 +404,22 @@ crate to encode my images.
 
 > I used the [ImageMagick](https://imagemagick.org/index.php) tool to convert my existing PPM
 > files in the assets folder.
+
+## Mar 6
+
+Today, I'm going to start moving on to the next book in the series, _Ray Tracing: The Next Week_.
+Starting with a relatively easy concept, I'll simulate motion.
+
+### Motion Blur
+
+Since motion occurs over time, I'll need a 4-dimensional Ray struct to simulate it.
+The 4th dimension involved is time; a 4D ray can store what time it's being sent at.
+
+This allows the calculation of not only the intersection in space, but also in time.
+A rary projected at a given time may not intersect an object.
+
+The current implementation of motion blur assumes that all objects move linearly 
+across the frame, which isn't entirely accurate to a scene like depicted with balls
+"bouncing" up and downwards. A more complicated implementation of movement over a
+frame would be a good idea for extension.
+<!-- TODO: improve movement over frame -->

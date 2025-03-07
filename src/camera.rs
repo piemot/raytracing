@@ -1,7 +1,8 @@
 use indicatif::{ProgressBar, ProgressStyle};
+use rand::random;
 
 use crate::{
-    export::ImageWriter, vec::Normalized, Color, Hittable, Interval, Point3, Ray3, Vec2, Vec3,
+    export::ImageWriter, vec::Normalized, Color, Hittable, Interval, Point3, Ray4, Vec2, Vec3,
 };
 use std::error::Error;
 
@@ -359,9 +360,10 @@ impl<'a> Camera<'a> {
         self.export_writer.write(&buf).unwrap();
     }
 
-    /// Constructs a camera [`Ray3`] originating from the camera's `center` and directed at a
-    /// randomly sampled point around the pixel location `(i, j)`.
-    fn get_ray(&self, i: u32, j: u32) -> Ray3 {
+    /// Constructs a camera [`Ray4`] originating from the camera's `center` and directed at a
+    /// randomly sampled point around the pixel location `(i, j)`, at a random time between
+    /// 0.0 and 1.0.
+    fn get_ray(&self, i: u32, j: u32) -> Ray4 {
         let offset = match self.antialiasing_type {
             AntialiasingType::Disc => Vec2::random_in_unit_circle() / 2,
             AntialiasingType::Square => Vec2::random_range(-0.5..0.5),
@@ -380,10 +382,10 @@ impl<'a> Camera<'a> {
         };
 
         let ray_direction = px_sample - ray_origin;
-        Ray3::new(ray_origin, ray_direction)
+        Ray4::new(ray_origin, ray_direction, random())
     }
 
-    fn ray_color(ray: &Ray3, depth: u32, world: &impl Hittable) -> Color {
+    fn ray_color(ray: &Ray4, depth: u32, world: &impl Hittable) -> Color {
         if depth == 0 {
             // Exceeded the bounce depth limit :(
             return Color::black();
