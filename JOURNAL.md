@@ -529,3 +529,24 @@ produces hit metadata) all 100 objects in the scene, it quickly (without metadat
 parent objects before deciding there are only 10 objects that need to be hit and rendered.
 
 This results in at least a 2x speedup.
+
+### Textures
+
+It would be really nice to be able to draw a texture, like an external image,
+onto one of the objects. In theory (with difficulty) I could add a `Material` that
+changes its colour based on some parameter, like the y-value of the hit.
+That would look something like this: 
+
+![A sphere with two different colours](assets/dicolor.png)
+
+To implement this, I just copied the code for Lambertian materials, but added this line:
+```rs
+attenuation = match hit_point.y > self.y_parameter {
+    true => self.color1,
+    false => self.color2,
+};
+```
+
+It does work, but it's hard-coded and making any changes would be difficult.
+Plus, it still doesn't let me upload an arbitrary texture; I'd have to hard-code
+all the features of whatever I wanted to add.
