@@ -19,10 +19,35 @@ impl Color {
     /// Create a new Color with the given RGB values.
     /// ```
     /// use raytracing::Color;
-    /// let green = Color::new(0.0, 1.0, 1.0);
+    /// let cyan = Color::new(0.0, 1.0, 1.0);
     /// ```
     pub const fn new(r: f64, g: f64, b: f64) -> Self {
         Self { r, g, b }
+    }
+
+    /// Create a new Color with the given hex value.
+    /// ```
+    /// use raytracing::Color;
+    /// let cyan = Color::hex(0x0ff);
+    /// ```
+    pub fn hex(color: u32) -> Self {
+        let (r, g, b) = if color <= 0xfff {
+            let r = (color & 0xf00) >> 8;
+            let g = (color << 4 & 0xf00) >> 8;
+            let b = (color << 8 & 0xf00) >> 8;
+            (r * 16, g * 16, b * 16)
+        } else {
+            let r = (color & 0xff0000) >> 16;
+            let g = (color << 8 & 0xff0000) >> 16;
+            let b = (color << 16 & 0xff0000) >> 16;
+            (r, g, b)
+        };
+
+        Self::new(
+            f64::from(r) / 255.0,
+            f64::from(g) / 255.0,
+            f64::from(b) / 255.0,
+        )
     }
 
     /// Create a new Color repesenting black.
