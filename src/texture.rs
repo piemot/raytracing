@@ -4,6 +4,12 @@ use crate::{Color, Point3};
 
 pub trait Texture: std::fmt::Debug {
     fn value(&self, u: f64, v: f64, point: &Point3) -> Color;
+    fn into_texture(self) -> Rc<dyn Texture>
+    where
+        Self: Sized + 'static,
+    {
+        Rc::new(self)
+    }
 }
 
 #[derive(Debug)]

@@ -589,4 +589,22 @@ as a checkerboard.
 
 ![The bouncing balls scene, but with a checkerboard green and white ground](assets/checkerboard.png)
 
-### 
+Rendering two checkerboard-textured spheres on top of one another, something kind of weird
+starts to happen.
+
+![Two checkered spheres on top of each other](assets/checker-spheres.png)
+
+The checkerboard suddenly reverses color at certain points, forming lines around the circumference
+of the spheres. This happens because the checkerboard textuer is a *3D* texture; it's influenced by 
+the $y$-position as well as $x$ and $z$. What happens if this influence is removed?
+
+![Two checkered spheres on top of each other](assets/checker-spheres-y.png)
+
+Okay, that looks pretty good!
+
+![Two checkered spheres on top of each other](assets/checker-spheres-y-zoom.png)
+
+Oh.
+Because the $y$-axis dependency is removed, the sides of the spheres are just going to have lines down them.
+Wrapping a checkerboard around a sphere just isn't possible with spatial textures - which is where the $u$ 
+and $v$ coordinates mentioned earlier come in.

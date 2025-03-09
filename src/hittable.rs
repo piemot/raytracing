@@ -5,13 +5,13 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct HitRecord<'a> {
+pub struct HitRecord {
     // The point where the ray hit the object
     point: Point3,
     // The normal vector of the object at the point hit
     normal: Vec3<Normalized>,
     // The material of the hit surface
-    material: &'a dyn Material,
+    material: Rc<dyn Material>,
     // uv texturer coordinates
     u: f64,
     v: f64,
@@ -21,7 +21,7 @@ pub struct HitRecord<'a> {
     front_face: bool,
 }
 
-impl<'a> HitRecord<'a> {
+impl HitRecord {
     pub fn point(&self) -> Point3 {
         self.point
     }
@@ -42,8 +42,8 @@ impl<'a> HitRecord<'a> {
         self.v
     }
 
-    pub fn material(&self) -> &'a (dyn Material + 'a) {
-        self.material
+    pub fn material(&self) -> Rc<dyn Material> {
+        Rc::clone(&self.material)
     }
 
     pub fn front_face(&self) -> bool {
@@ -55,7 +55,7 @@ impl<'a> HitRecord<'a> {
         point: &Point3,
         normal: &Vec3<Normalized>,
         t: f64,
-        material: &'a dyn Material,
+        material: Rc<dyn Material>,
     ) -> Self {
         let front_face = Vec3::dot(&ray.direction(), normal) < 0.0;
         let normal = if front_face { *normal } else { -*normal };
@@ -90,19 +90,19 @@ pub trait Hittable: std::fmt::Debug {
 }
 
 #[derive(Debug)]
-pub struct Sphere<'a> {
+pub struct Sphere {
     center: Ray3,
     radius: f64,
-    material: &'a dyn Material,
+    material: Rc<dyn Material>,
     bounding_box: BoundingBox3,
 }
 
-impl<'a> Sphere<'a> {
-    pub fn stationary(center: Point3, radius: f64, material: &'a dyn Material) -> Self {
+impl Sphere {
+    pub fn stationary(center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
         Self::new(Ray3::new(center, Vec3::empty()), radius, material)
     }
 
-    pub fn new(center: Ray3, radius: f64, material: &'a dyn Material) -> Self {
+    pub fn new(center: Ray3, radius: f64, material: Rc<dyn Material>) -> Self {
         assert!(radius >= 0.0);
         let rad_vec = Vec3::new(radius, radius, radius);
 
@@ -123,7 +123,7 @@ impl<'a> Sphere<'a> {
     }
 }
 
-impl Hittable for Sphere<'_> {
+impl Hittable for Sphere {
     fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
         let current_center = self.center.at(ray.time());
         let oc = current_center - ray.origin();
@@ -155,7 +155,7 @@ impl Hittable for Sphere<'_> {
             &point,
             &normal,
             root,
-            self.material,
+            Rc::clone(&self.material),
         ))
     }
 
