@@ -1,5 +1,5 @@
 use crate::math::macros::forward_ref_binop;
-use crate::{Vec2, Vec3};
+use crate::{Axis, Vec2, Vec3};
 use std::{
     fmt::Display,
     ops::{Add, Sub},
@@ -68,6 +68,18 @@ impl Point3 {
 
     pub fn shift_z(&self, z: f64) -> Point3 {
         Point3::new(self.x, self.y, self.z + z)
+    }
+}
+
+impl std::ops::Index<Axis> for Point3 {
+    type Output = f64;
+
+    fn index(&self, index: Axis) -> &Self::Output {
+        match index {
+            Axis::X => &self.x,
+            Axis::Y => &self.y,
+            Axis::Z => &self.z,
+        }
     }
 }
 

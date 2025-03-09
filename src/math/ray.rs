@@ -57,4 +57,8 @@ impl Ray4 {
     pub fn time(&self) -> f64 {
         self.time
     }
+
+    pub fn ignore_time(&self) -> Ray3 {
+        Ray3::new(self.origin(), self.direction())
+    }
 }

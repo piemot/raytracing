@@ -1,12 +1,73 @@
 use std::ops::{Deref, RangeInclusive};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 /// A custom struct extending Range, with some extra utilities.
 pub struct Interval(RangeInclusive<f64>);
 
 impl Interval {
     pub const fn new(start: f64, end: f64) -> Self {
         Self(start..=end)
+    }
+
+    /// Generates an interval with a positive difference (i.e. start <= end).
+    ///
+    /// # Examples
+    /// ```
+    /// use raytracing::Interval;
+    ///
+    /// let a = Interval::positive(10.0, 20.0);
+    /// let b = Interval::positive(20.0, 10.0);
+    /// assert_eq!(a, Interval::new(10.0, 20.0));
+    /// assert_eq!(b, Interval::new(10.0, 20.0));
+    /// ```
+    pub fn positive(a: f64, b: f64) -> Self {
+        if a <= b {
+            Self::new(a, b)
+        } else {
+            Self::new(b, a)
+        }
+    }
+
+    /// Given another interval, returns the overlapping inteval of the two.
+    ///
+    /// # Examples
+    /// ```
+    /// use raytracing::Interval;
+    ///
+    /// let a = Interval::positive(10.0, 20.0);
+    /// let b = Interval::positive(15.0, 25.0);
+    /// let c = Interval::positive(20.0, 25.0);
+    /// assert_eq!(a.overlap(&b), Some(Interval::new(15.0, 20.0)));
+    /// assert_eq!(b.overlap(&c), Some(Interval::new(20.0, 25.0)));
+    /// assert_eq!(c.overlap(&a), None);
+    /// ```
+    pub fn overlap(&self, rhs: &Self) -> Option<Self> {
+        let res = Self::new(
+            f64::max(*self.start(), *rhs.start()),
+            f64::min(*self.end(), *rhs.end()),
+        );
+        if res.size() <= 0.0 {
+            None
+        } else {
+            Some(res)
+        }
+    }
+
+    /// Constructs a new Interval surrounding both provided intervals.
+    ///
+    /// # Examples
+    /// ```
+    /// use raytracing::Interval;
+    ///
+    /// let a = Interval::positive(10.0, 20.0);
+    /// let b = Interval::positive(-2.0, 4.0);
+    /// assert_eq!(Interval::surrounding(&a, &b), Some(Interval::new(-2.0, 20.0)));
+    /// ```
+    pub fn surrounding(a: &Self, b: &Self) -> Self {
+        Self::positive(
+            f64::min(*a.start(), *b.start()),
+            f64::max(*a.end(), *b.end()),
+        )
     }
 
     pub const fn empty() -> Self {
@@ -74,6 +135,21 @@ impl Interval {
         } else {
             item
         }
+    }
+
+    /// Creates a new [`Interval`] with a length `delta` greater than
+    /// its currernt length. Each side is expanded by `delta / 2`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use raytracing::Interval;
+    /// let inter = Interval::new(5.0, 10.0);
+    /// let inter = inter.expand(1.0);
+    /// assert_eq!(inter, Interval::new(4.5, 10.5))
+    /// ```
+    pub fn expand(&self, delta: f64) -> Self {
+        Self::new(self.start() - delta / 2.0, self.end() + delta / 2.0)
     }
 }
 

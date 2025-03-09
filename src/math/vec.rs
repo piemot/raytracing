@@ -1,4 +1,4 @@
-use crate::math::macros::forward_ref_binop;
+use crate::{math::macros::forward_ref_binop, Axis};
 use rand::distr::Distribution;
 use std::{
     fmt::Display,
@@ -276,6 +276,18 @@ impl Vec3<Normalized> {
         let rayout_parallel = -(1.0 - rayout_perpendicular.len_squared()).abs().sqrt() * normal;
 
         rayout_perpendicular + rayout_parallel
+    }
+}
+
+impl<T: NormalizationState> std::ops::Index<Axis> for Vec3<T> {
+    type Output = f64;
+
+    fn index(&self, index: Axis) -> &Self::Output {
+        match index {
+            Axis::X => &self.x,
+            Axis::Y => &self.y,
+            Axis::Z => &self.z,
+        }
     }
 }
 

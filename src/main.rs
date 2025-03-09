@@ -1,12 +1,13 @@
 use rand::{random_range, Rng};
 use raytracing::{
+    boundingbox::BVHNode,
     camera::AntialiasingType,
     export::PngWriter,
     hittable::{HittableVec, Sphere},
     material::{Dielectric, Lambertian, Metal},
-    CameraBuilder, Color, Material, Point3, Ray3, Vec3,
+    CameraBuilder, Color, Hittable, Material, Point3, Ray3, Vec3,
 };
-use std::io;
+use std::{io, rc::Rc};
 
 fn main() {
     let mut stdout = io::stdout().lock();
@@ -25,9 +26,14 @@ fn main() {
 
     let mut world = HittableVec::new();
 
-    let ground_mat = Box::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    let ground = Sphere::stationary(Point3::new(0.0, -1000.0, 0.0), 1000.0, &*ground_mat);
-    world.add(&ground);
+    let ground_mat: &mut dyn Material =
+        Box::leak(Box::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))));
+    let ground: Rc<dyn Hittable> = Rc::new(Sphere::stationary(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        ground_mat,
+    ));
+    world.add(ground);
 
     let mut rng = rand::rng();
 
@@ -80,10 +86,14 @@ fn main() {
                 }
                 _ => Sphere::stationary(center, 0.2, mat),
             };
-            let sphere = Box::leak(Box::new(sphere));
+            let sphere = Rc::new(sphere);
             world.add(sphere);
         }
     }
+
+    let bvh_world: Rc<dyn Hittable> = Rc::new(BVHNode::new(world.into()));
+
+    world = [bvh_world].into_iter().collect();
 
     cam.render(&world);
 }

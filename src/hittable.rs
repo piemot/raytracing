@@ -1,4 +1,8 @@
-use crate::{vec::Normalized, Interval, Material, Point3, Ray3, Ray4, Vec3};
+use std::rc::Rc;
+
+use crate::{
+    boundingbox::BoundingBox3, vec::Normalized, Interval, Material, Point3, Ray3, Ray4, Vec3,
+};
 
 #[derive(Debug, Clone)]
 pub struct HitRecord<'a> {
@@ -59,7 +63,12 @@ impl<'a> HitRecord<'a> {
 }
 
 pub trait Hittable: std::fmt::Debug {
+    // Attempts to hit the object, at a given time.
+    // If hit, the object should return Hit(HitRecord) describing how the hit occurred.
     fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord>;
+
+    // can return None, but will never recieve any [hit()]s.
+    fn bounding_box(&self) -> Option<&BoundingBox3>;
 }
 
 #[derive(Debug)]
@@ -67,24 +76,31 @@ pub struct Sphere<'a> {
     center: Ray3,
     radius: f64,
     material: &'a dyn Material,
+    bounding_box: BoundingBox3,
 }
 
 impl<'a> Sphere<'a> {
     pub fn stationary(center: Point3, radius: f64, material: &'a dyn Material) -> Self {
-        assert!(radius >= 0.0);
-        Self {
-            center: Ray3::new(center, Vec3::empty()),
-            radius,
-            material,
-        }
+        Self::new(Ray3::new(center, Vec3::empty()), radius, material)
     }
 
     pub fn new(center: Ray3, radius: f64, material: &'a dyn Material) -> Self {
         assert!(radius >= 0.0);
+        let rad_vec = Vec3::new(radius, radius, radius);
+
+        // bb at time = 0
+        let box0 =
+            BoundingBox3::bounded_by(&(center.origin() - rad_vec), &(center.origin() + rad_vec));
+
+        // bb at time = 1
+        let box1 =
+            BoundingBox3::bounded_by(&(center.at(1.0) - rad_vec), &(center.at(1.0) + rad_vec));
+
         Self {
             center,
             radius,
             material,
+            bounding_box: BoundingBox3::extending(&box0, &box1),
         }
     }
 }
@@ -124,26 +140,42 @@ impl Hittable for Sphere<'_> {
             self.material,
         ))
     }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        Some(&self.bounding_box)
+    }
 }
 
 #[derive(Debug, Default)]
-pub struct HittableVec<'a> {
-    objects: Vec<&'a dyn Hittable>,
+pub struct HittableVec {
+    pub(super) objects: Vec<Rc<dyn Hittable>>,
+    pub(super) bounding_box: Option<BoundingBox3>,
 }
 
-impl<'a> HittableVec<'a> {
+impl Into<Vec<Rc<dyn Hittable>>> for HittableVec {
+    fn into(self) -> Vec<Rc<dyn Hittable>> {
+        self.objects
+    }
+}
+
+impl HittableVec {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
+            bounding_box: None,
         }
     }
 
-    pub fn add(&mut self, obj: &'a dyn Hittable) {
+    pub fn add(&mut self, obj: Rc<dyn Hittable>) {
+        self.bounding_box = match &self.bounding_box {
+            Some(bbox) => Some(BoundingBox3::extending(bbox, obj.bounding_box().unwrap())),
+            None => Some(obj.bounding_box().unwrap().clone()),
+        };
         self.objects.push(obj);
     }
 }
 
-impl Hittable for HittableVec<'_> {
+impl Hittable for HittableVec {
     fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
         let mut closest_record: Option<HitRecord> = None;
         let mut closest_dist = *ray_t.end();
@@ -156,5 +188,19 @@ impl Hittable for HittableVec<'_> {
         }
 
         closest_record
+    }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        self.bounding_box.as_ref()
+    }
+}
+
+impl FromIterator<Rc<dyn Hittable>> for HittableVec {
+    fn from_iter<T: IntoIterator<Item = Rc<dyn Hittable>>>(iter: T) -> Self {
+        let mut this = HittableVec::new();
+        for obj in iter {
+            this.add(obj);
+        }
+        this
     }
 }

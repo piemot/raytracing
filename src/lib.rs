@@ -1,8 +1,12 @@
+pub mod axis;
+pub mod boundingbox;
 pub mod camera;
 pub mod export;
 pub mod hittable;
 pub mod material;
 pub mod math;
+
+pub use axis::Axis;
 
 pub use camera::{AntialiasingType, Camera, CameraBuilder};
 

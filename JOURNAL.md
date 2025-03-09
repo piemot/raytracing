@@ -423,3 +423,109 @@ across the frame, which isn't entirely accurate to a scene like depicted with ba
 "bouncing" up and downwards. A more complicated implementation of movement over a
 frame would be a good idea for extension.
 <!-- TODO: improve movement over frame -->
+
+![Motion Blur](assets/motionblur.png)
+
+### Optimizations (Bounding Volume Hierarchies)
+
+After getting a nice warm-up done, I'll move on to a more challenging
+and significant part of the ray-tracer: BVHs.
+
+Bounding Volume Hierarchies are a technique used to improve the speed
+of the code. In the current version, when a ray bounces off an object it has to
+check every other Hittable in the scene to see if it intersects.
+
+If the scene could be divided into a hierarchy of smaller regions, the ray could
+choose to only check the nearest region in the desired direction.
+
+For instance, if you have some spheres inside a cube, the cube can be
+checked for an intersection. If the cube is not hit, there's a
+guarantee that none of the contained spheres are also hit.
+
+![Rays cast towards spheres with a surrounding boundary](assets/03-09-boundingbox.svg)
+
+### Defining Bounding Boxes
+
+Notably, in order for the BVH startegy to work, there needs to be a fast way to
+- a. create useful volumes 
+- and b. quickly check whether a ray intersects with a hierarchy of volumes.
+
+In practice, for most (but not all) models, axis-aligned rectangular prisms
+tend to solve both of these problems the best. For short, I'll call them
+AABBs; axis-aligned bounding boxes.
+
+Unlike collisions with an object, points, normals, and other data don't need to
+be found when testing AABB intersections. This is because they're not rendered;
+it doesn't matter where they are on the screen, only whether or not a ray intersects them.
+This means they can't implement `Hittable`; it requires either a `None` value (the ray missed)
+or `Some(details)` (the ray did hit, and all the details of the hit are provided).
+Later, I'll need to create another struct that _does_ implement `Hittable` to proxy
+the events.
+
+The simplest way to create AABBs is to constrruct them based on the idea that a
+$n$-dimensional rectangle (i.e. a rectangle or rectangular prism) is composed of $n$ 
+intervals (for instance, `(2.0, 3.0)`) - one for each axis. Given this, a bounding box
+is just the overlap of the intervals, which forms a rectangle in 2d space
+and a rectangular prism in 3D space.
+
+![A 2D bounding box, constructed from two 1-D intervals](assets/03-09-boundingbox-const.svg)
+
+### Collisions
+
+Remembering that the formula for a ray is $P(t) = A + tB$, an interval of $t$ values where
+the ray intersects a given plane can be found. If a $t$ interval is computed for each axis of 
+the box, and all of these $t$ intervals overlap, the ray must be intersecting the bounding box.
+
+In the image below, areas $A_x$ and $A_y$ don't overlap; neither do areas $C_x$ and $C_y$.
+But since ray $B$ goes through the bounding box, areas $B_x$ and $B_y$ intersect inside
+that box.
+
+![t values only intersect inside the bounding box](assets/03-09-intersect.svg)
+
+This is really quick to check - just compute the $t$-value of the ray at each edge of a given
+axis's interval with $t_{0x} = \frac{x_0 - A}{B}$, where $A$ is the origin point of the ray, 
+$B$ is  the ray's vector, $x_0$ is the lowest value of the x-axis interval, and $t_{0x}$ is the 
+$t$-value where the ray intersects $x_0$. Swapping out $t_{1x}$, the farther part of the x-axis
+interval, the second half of the $t$ interval is $t_{1x} = \frac{x_1 - A}{B}$, and
+the final x-axis interval of $t$ values is ($t_{0x}$, $t_{1x}$).
+
+This is really quick to compute - just some addition, multiplication, and intersection logic
+(which is mostly `<=` and `>=` statements).
+
+## Mar 9
+
+### Hittable Bounding Boxes
+
+All `Hittable` objects should be able to provide a bounding box that encompasses them,
+so the `Hittable` trait has been extended with a new method:
+
+```rs
+    fn bounding_box(&self) -> Option<&BoundingBox3>;
+```
+
+This indicates that anything that is `Hittable` must be able to return either its own
+bounding box (`Some<&BoundingBox3>`), or indicate that it doesn't have a bounding box and 
+therefore doesn't need to be hit (`None`). An example of this behaviour would be an empty 
+`HittableVec`; a `HittableVec` proxies hits to its contained objects, but if it doesn't have
+any objects there's no need to accept hit attempts.
+
+A `Sphere` just returns the bounding box of a cube circumscribed around itself, which
+is trivial to calculate with the radius and center of the sphere. A `HittableVec`,
+if it holds objects, should return the smallest rectangle that can fit over all its'
+children's own bounding boxes.
+
+### Hierarchies
+
+The key to this optimization lies in the name: Bounding Volume *Hierarchies*.
+
+![A hierarchy of bounding boxes, with a tree diagram alongside](assets/03-09-hierarchy.svg)
+
+The algorithm starts at the top of the tree, checks the parent bounding box, and then starts 
+stepping down the tree, checking each child as it goes.
+If the ray doesn't touch a parent element of the tree, the ray tracer can be sure that 
+the rest of that branch can be entirely skipped, because every parent encompasses all of its 
+children. Instead of checking (with a slow algorithm, because checking renderable objects 
+produces hit metadata) all 100 objects in the scene, it quickly (without metadata) checks 20 
+parent objects before deciding there are only 10 objects that need to be hit and rendered.
+
+This results in at least a 2x speedup.
