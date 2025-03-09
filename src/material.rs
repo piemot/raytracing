@@ -41,6 +41,45 @@ impl Material for Lambertian {
         })
     }
 }
+#[derive(Debug)]
+pub struct DoubleLambertian {
+    albedo1: Color,
+    albedo2: Color,
+    y: f64,
+}
+
+impl DoubleLambertian {
+    pub fn new(albedo1: Color, albedo2: Color, y: f64) -> Self {
+        Self {
+            albedo1,
+            albedo2,
+            y,
+        }
+    }
+}
+
+impl Material for DoubleLambertian {
+    // Lambertian materials are independant of the incoming ray due to Lambert's Cosine Law.
+    fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult> {
+        let mut scatter_direction = record.normal() + Vec3::random_unit_vector();
+
+        // Catch random_unit_vector being opposite record.normal()
+        if scatter_direction.near_zero() {
+            scatter_direction = record.normal().into();
+        }
+
+        let scattered = Ray4::new(record.point(), scatter_direction, ray_in.time());
+        let attenuation = match record.point().y() > self.y {
+            true => self.albedo1,
+            false => self.albedo2,
+        };
+
+        Some(MaterialResult {
+            attenuation,
+            scattered,
+        })
+    }
+}
 
 #[derive(Debug)]
 pub struct Metal {
