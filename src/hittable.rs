@@ -6,10 +6,18 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct HitRecord<'a> {
+    // The point where the ray hit the object
     point: Point3,
+    // The normal vector of the object at the point hit
     normal: Vec3<Normalized>,
+    // The material of the hit surface
     material: &'a dyn Material,
+    // uv texturer coordinates
+    u: f64,
+    v: f64,
+    // Point on the ray that the hit occurred at
     t: f64,
+    // Whether the ray hit the front or back face of the object
     front_face: bool,
 }
 
@@ -24,6 +32,14 @@ impl<'a> HitRecord<'a> {
 
     pub fn t(&self) -> f64 {
         self.t
+    }
+
+    pub fn u(&self) -> f64 {
+        self.u
+    }
+
+    pub fn v(&self) -> f64 {
+        self.v
     }
 
     pub fn material(&self) -> &'a (dyn Material + 'a) {
@@ -49,6 +65,8 @@ impl<'a> HitRecord<'a> {
             t,
             front_face,
             material,
+            u: f64::NAN,
+            v: f64::NAN,
         }
     }
 

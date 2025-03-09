@@ -550,3 +550,43 @@ attenuation = match hit_point.y > self.y_parameter {
 It does work, but it's hard-coded and making any changes would be difficult.
 Plus, it still doesn't let me upload an arbitrary texture; I'd have to hard-code
 all the features of whatever I wanted to add.
+
+Firstly, some definitions. Texture Mapping is the process of mathematically applying (mapping)
+a property (the texture) onto an object in the scene. The most common property used is color,
+but it could also be the shininess, shape (adding valleys or mountains), or transparency.
+
+For color mapping, a function needs to be defined that takes in points on the surface of an object,
+and returns the color that should be rendered at that point. The easiest way to provide a texture is 
+with a 2D image, and the $x$ and $y$ coordinates on that image are, by convention, called $u$ and $v$.
+
+This means we can create a `Texture` trait like so:
+
+```rs
+trait Texture {
+    fn value(&self, u: f64, v: f64, point: &Point3) -> Color;
+}
+```
+
+A solid color would implement the trait very simply, ignoring the arguments
+and only returning its own Color:
+
+```rs
+impl Texture for SolidColor {
+    fn value(&self, _u: f64, _v: f64, _point: &Point3) -> Color {
+        self.albedo
+    }
+}
+```
+
+### Spatial Textures
+
+A "spatial" texture ignores the $u$ and $v$ coordinates, and is solely based off of its point in 3d space.
+A simple example of this texture is a checkerboard-style pattern, which takes two textures and a scaling value
+and, depending on the point in 3D space, returns either of those input textures.
+
+Adjusting the Lambertian material to accept textures, instead of only colors, the ground can be rendered
+as a checkerboard.
+
+![The bouncing balls scene, but with a checkerboard green and white ground](assets/checkerboard.png)
+
+### 

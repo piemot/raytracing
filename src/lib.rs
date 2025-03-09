@@ -5,6 +5,7 @@ pub mod export;
 pub mod hittable;
 pub mod material;
 pub mod math;
+pub mod texture;
 
 pub use axis::Axis;
 
@@ -31,3 +32,5 @@ pub use math::color::Color;
 
 pub use math::ray;
 pub use math::ray::{Ray3, Ray4};
+
+pub use texture::Texture;

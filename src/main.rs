@@ -5,7 +5,8 @@ use raytracing::{
     export::PngWriter,
     hittable::{HittableVec, Sphere},
     material::{Dielectric, Lambertian, Metal},
-    CameraBuilder, Color, Hittable, Material, Point3, Ray3, Vec3,
+    texture::{Checkerboard, SolidColor},
+    CameraBuilder, Color, Hittable, Material, Point3, Ray3, Texture, Vec3,
 };
 use std::{io, rc::Rc};
 
@@ -26,8 +27,13 @@ fn main() {
 
     let mut world = HittableVec::new();
 
-    let ground_mat: &mut dyn Material =
-        Box::leak(Box::new(Lambertian::new(Color::new(0.5, 0.5, 0.5))));
+    let checker_tex = Checkerboard::solid(
+        0.32,
+        Color::new(0.2, 0.3, 0.1).into(),
+        Color::new(0.9, 0.9, 0.9).into(),
+    );
+
+    let ground_mat: &mut dyn Material = Box::leak(Box::new(Lambertian::new(Rc::new(checker_tex))));
     let ground: Rc<dyn Hittable> = Rc::new(Sphere::stationary(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -59,9 +65,10 @@ fn main() {
             let (mat_type, material): (_, Box<dyn Material>) = match rng.random() {
                 0.00..0.80 => {
                     let albedo = Color::new(rng.random(), rng.random(), rng.random());
+                    let texture: Rc<dyn Texture> = Rc::new(SolidColor::new(albedo));
                     (
                         SphereMaterial::Lambertian,
-                        Box::new(Lambertian::new(albedo)),
+                        Box::new(Lambertian::new(texture)),
                     )
                 }
                 0.80..=0.95 => {
@@ -79,8 +86,6 @@ fn main() {
             let mat = Box::leak(material);
             let sphere = match mat_type {
                 SphereMaterial::Lambertian => {
-                    // auto center2 = center + vec3(0, random_double(0,.5), 0);
-                    // world.add(make_shared<sphere>(center, center2, 0.2, sphere_material));
                     let dir = Vec3::new(0.0, random_range(0.0..0.5), 0.0);
                     Sphere::new(Ray3::new(center, dir), 0.2, mat)
                 }

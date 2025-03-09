@@ -1,6 +1,8 @@
+use std::rc::Rc;
+
 use rand::random;
 
-use crate::{Color, HitRecord, Ray4, Vec3};
+use crate::{texture::SolidColor, Color, HitRecord, Ray4, Texture, Vec3};
 
 #[derive(Debug)]
 pub struct MaterialResult {
@@ -13,13 +15,15 @@ pub trait Material: std::fmt::Debug {
 }
 
 #[derive(Debug)]
-pub struct Lambertian {
-    albedo: Color,
-}
+pub struct Lambertian(Rc<dyn Texture>);
 
 impl Lambertian {
-    pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+    pub fn new(texture: Rc<dyn Texture>) -> Self {
+        Self(texture)
+    }
+
+    pub fn solid(albedo: Color) -> Self {
+        Self(Rc::new(SolidColor::new(albedo)))
     }
 }
 
@@ -36,7 +40,7 @@ impl Material for Lambertian {
         let scattered = Ray4::new(record.point(), scatter_direction, ray_in.time());
 
         Some(MaterialResult {
-            attenuation: self.albedo,
+            attenuation: self.0.value(record.u(), record.v(), &record.point()),
             scattered,
         })
     }
