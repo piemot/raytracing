@@ -256,3 +256,27 @@ impl From<Vec2> for Point2 {
         Point2::new(value.x(), value.y())
     }
 }
+
+impl From<(f64, f64)> for Point2 {
+    fn from(value: (f64, f64)) -> Self {
+        Point2::new(value.0, value.1)
+    }
+}
+
+impl From<Point2> for (f64, f64) {
+    fn from(value: Point2) -> Self {
+        (value.x, value.y)
+    }
+}
+
+impl From<(f64, f64, f64)> for Point3 {
+    fn from(value: (f64, f64, f64)) -> Self {
+        Point3::new(value.0, value.1, value.2)
+    }
+}
+
+impl From<Point3> for (f64, f64, f64) {
+    fn from(value: Point3) -> Self {
+        (value.x, value.y, value.z)
+    }
+}

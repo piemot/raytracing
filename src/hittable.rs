@@ -1,7 +1,8 @@
-use std::rc::Rc;
+use std::{f64::consts::PI, rc::Rc};
 
 use crate::{
-    boundingbox::BoundingBox3, vec::Normalized, Interval, Material, Point3, Ray3, Ray4, Vec3,
+    boundingbox::BoundingBox3, vec::Normalized, Interval, Material, Point2, Point3, Ray3, Ray4,
+    Vec3,
 };
 
 #[derive(Debug, Clone)]
@@ -55,6 +56,8 @@ impl HitRecord {
         point: &Point3,
         normal: &Vec3<Normalized>,
         t: f64,
+        u: f64,
+        v: f64,
         material: Rc<dyn Material>,
     ) -> Self {
         let front_face = Vec3::dot(&ray.direction(), normal) < 0.0;
@@ -63,10 +66,10 @@ impl HitRecord {
             point: *point,
             normal,
             t,
+            u,
+            v,
             front_face,
             material,
-            u: f64::NAN,
-            v: f64::NAN,
         }
     }
 
@@ -121,6 +124,20 @@ impl Sphere {
             bounding_box: BoundingBox3::extending(&box0, &box1),
         }
     }
+
+    fn get_uv(point: &Point3) -> Point2 {
+        // `point` must be inside the unit sphere
+        assert!((Point3::origin() - point).len_squared() <= 1.0001);
+
+        let theta = f64::acos(-point.y());
+        let phi = f64::atan2(-point.z(), point.x()) + PI;
+
+        // u and v range from [0.0, 1.0]
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
+
+        Point2::new(u, v)
+    }
 }
 
 impl Hittable for Sphere {
@@ -148,13 +165,18 @@ impl Hittable for Sphere {
         }
 
         let point = ray.at(root);
+
         // mathematically guaranteed to be normalized
         let normal = ((point - current_center) / self.radius).assert_is_normalized();
+
+        let (u, v) = Sphere::get_uv(&Vec3::from(normal).into()).into();
         Some(HitRecord::from_incoming_ray(
             ray,
             &point,
             &normal,
             root,
+            u,
+            v,
             Rc::clone(&self.material),
         ))
     }
@@ -220,5 +242,24 @@ impl FromIterator<Rc<dyn Hittable>> for HittableVec {
             this.add(obj);
         }
         this
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn sphere_uv_conversions() {
+        let uv_tests = [
+            (Point3::new(1.0, 0.0, 0.0), Point2::new(0.5, 0.5)),
+            (Point3::new(-1.0, 0.0, 0.0), Point2::new(0.0, 0.5)),
+            (Point3::new(0.0, 1.0, 0.0), Point2::new(0.5, 1.0)),
+            (Point3::new(0.0, -1.0, 0.0), Point2::new(0.5, 0.0)),
+            (Point3::new(0.0, 0.0, 1.0), Point2::new(0.25, 0.5)),
+            (Point3::new(0.0, 0.0, -1.0), Point2::new(0.75, 0.5)),
+        ];
+        for (point, res) in uv_tests {
+            assert_eq!(Sphere::get_uv(&point), res);
+        }
     }
 }

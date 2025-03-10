@@ -24,3 +24,8 @@ All work, unless otherwise stated (in [Attributions](#attributions), a [JOURNAL]
 
 ### Libraries
 See [Cargo.toml](Cargo.toml) for a full list of dependencies used. [crates.io](https://crates.io) can be searched to find sub-dependencies, source code, licensing information, and attributions.
+
+### Textures
+* [Solar System Scope](assets/textures/earth.png), 
+    [CC BY 4.0](https://creativecommons.org/licenses/by/4.0), 
+    via Wikimedia Commons

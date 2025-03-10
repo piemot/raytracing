@@ -25,6 +25,19 @@ impl Color {
         Self { r, g, b }
     }
 
+    /// Create a new Color with the given RGB values.
+    /// ```
+    /// use raytracing::Color;
+    /// let cyan = Color::new(0, 255, 255);
+    /// ```
+    pub fn new_ints(r: u8, g: u8, b: u8) -> Self {
+        Self {
+            r: f64::from(r) / 255.0,
+            g: f64::from(g) / 255.0,
+            b: f64::from(b) / 255.0,
+        }
+    }
+
     /// Create a new Color with the given hex value.
     /// ```
     /// use raytracing::Color;

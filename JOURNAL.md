@@ -608,3 +608,38 @@ Oh.
 Because the $y$-axis dependency is removed, the sides of the spheres are just going to have lines down them.
 Wrapping a checkerboard around a sphere just isn't possible with spatial textures - which is where the $u$ 
 and $v$ coordinates mentioned earlier come in.
+
+### Spherical Surface Textures
+
+Let's review the different types of textures.
+- Constant textures don't use any coordinates.
+- Spatial textures use the $(x, y, z)$ coordinates of the 3D space.
+- Surface textures use the $(x, y, z)$ coordinates of the 3D space *and* the $(u, v)$ *texture* 
+  coordinates, which point to locations in a separate 2D space.
+
+The mapping from positions on the surface of a 3D object to the texture coordinates
+is arbitrary, but for a sphere a good method is to convert latitude and longitude
+into 2D texture space.
+
+Latitude and longitude can be represented by $\theta$ and $\phi$, where $\theta$ 
+is the angle upwards from the bottom pole of the sphere, and $\phi$ is the angle 
+around the $x$-axis, starting at -$x$ and moving towards +$z$.
+Mapping $\theta$ to $u$ and $\phi$ to $v$ across the range [0, 1] (with $(0, 0)$ 
+in the $uv$ space representing the *bottom-left* corner), and using a lot of 
+trigonometry, a point on the unit sphere can return $(u, v)$ values rarnging from 0 to 1.
+
+Again by convention, $u$ and $v$ values range from 0.0 to 1.0. Converting a pixel $(i, j)$ in 
+texture space on an $N_x$ by $N_y$ image to a $(u, v)$ value can be done with a fractional
+coordinate system: 
+
+$ u = \frac{i}{N_x - 1} $
+
+$ v = \frac{i}{N_y - 1} $
+
+With these formulas, an image of the world like this...
+
+![A rectangular satellite image of the earth](assets/textures/earth.png)
+
+can be rendered across a sphere!
+
+![The image, rendered over a sphere](assets/earth.png)
