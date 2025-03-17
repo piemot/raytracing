@@ -730,3 +730,5 @@ of the disc relative to the size of the u, v vectors.
 
 Similarly, a triangle could be represented as $(\alpha > 0) \land (\beta > 0) \land (\alpha + \beta < 1)$,
 which selects a triangle between points $Q$, $Q + u$, and $Q + v$ (see diagram above of these points).
+
+![Rendered squares, triangles, and discs](assets/shapes.png)

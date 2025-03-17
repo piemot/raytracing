@@ -341,6 +341,199 @@ impl Hittable for Parallelogram {
     }
 }
 
+// TODO: make constructor functions more ergonomic (f.e. define three points)
+#[derive(Debug)]
+pub struct Triangle {
+    corner: Point3,
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
+    d: f64,
+    normal: Vec3<Normalized>,
+    material: Rc<dyn Material>,
+    bounding_box: BoundingBox3,
+}
+
+impl Triangle {
+    pub fn new(corner: Point3, u: Vec3, v: Vec3, material: Rc<dyn Material>) -> Self {
+        let diag_1 = BoundingBox3::bounded_by(&corner, &(corner + u + v));
+        let diag_2 = BoundingBox3::bounded_by(&(corner + u), &(corner + v));
+
+        let bounding_box = BoundingBox3::extending(&diag_1, &diag_2);
+
+        let n = Vec3::cross(&u, &v);
+        let normal = n.as_unit();
+        let d = Vec3::dot(&normal, &Vec3::from(corner));
+
+        let w = n / Vec3::dot(&n, &n);
+
+        Self {
+            corner,
+            u,
+            v,
+            d,
+            w,
+            normal,
+            material,
+            bounding_box,
+        }
+    }
+
+    /// Checks whether the object is hit, assuming the plane it exists on is hit
+    /// and given (a, b), the coordinates on the plane relative to the
+    /// object's u and v vectors.
+    ///
+    /// Returns None if the object is missed, otherwise Some(u, v) where u, v are the
+    /// appropriate UV coordinates.
+    pub fn is_interior(&self, a: f64, b: f64) -> Option<(f64, f64)> {
+        if a < 0.0 || b < 0.0 || (a + b) > 1.0 {
+            return None;
+        }
+
+        // a, b are identical to u, v coordinates;
+        // both are in fractional space
+        Some((a, b))
+    }
+}
+
+impl Hittable for Triangle {
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
+        let demon = Vec3::dot(&self.normal, &ray.direction());
+
+        // ray is parallel to the plane; no hit
+        if demon.abs() < 1e-8 {
+            return None;
+        }
+
+        let t = (self.d - Vec3::dot(&self.normal, &Vec3::from(ray.origin()))) / demon;
+        if !ray_t.contains(t) {
+            return None;
+        }
+
+        // check if the hit point is within the planar shape using its planar coordinates
+        let intersection = ray.at(t);
+        let planar_hit_vec = intersection - self.corner;
+        let alpha = Vec3::dot(&self.w, &Vec3::cross(&planar_hit_vec, &self.v));
+        let beta = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hit_vec));
+
+        let Some((u, v)) = self.is_interior(alpha, beta) else {
+            return None;
+        };
+
+        Some(HitRecord::from_incoming_ray(
+            ray,
+            &intersection,
+            &self.normal,
+            t,
+            u,
+            v,
+            Rc::clone(&self.material),
+        ))
+    }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        Some(&self.bounding_box)
+    }
+}
+
+// TODO: make constructor functions more ergonomic (f.e. define center, radius, etc.)
+#[derive(Debug)]
+pub struct Disc {
+    corner: Point3,
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
+    d: f64,
+    normal: Vec3<Normalized>,
+    material: Rc<dyn Material>,
+    bounding_box: BoundingBox3,
+}
+
+impl Disc {
+    pub fn new(corner: Point3, u: Vec3, v: Vec3, material: Rc<dyn Material>) -> Self {
+        let diag_1 = BoundingBox3::bounded_by(&corner, &(corner + u + v));
+        let diag_2 = BoundingBox3::bounded_by(&(corner + u), &(corner + v));
+
+        let bounding_box = BoundingBox3::extending(&diag_1, &diag_2);
+
+        let n = Vec3::cross(&u, &v);
+        let normal = n.as_unit();
+        let d = Vec3::dot(&normal, &Vec3::from(corner));
+
+        let w = n / Vec3::dot(&n, &n);
+
+        Self {
+            corner,
+            u,
+            v,
+            d,
+            w,
+            normal,
+            material,
+            bounding_box,
+        }
+    }
+
+    /// Checks whether the object is hit, assuming the plane it exists on is hit
+    /// and given (a, b), the coordinates on the plane relative to the
+    /// object's u and v vectors.
+    ///
+    /// Returns None if the object is missed, otherwise Some(u, v) where u, v are the
+    /// appropriate UV coordinates.
+    pub fn is_interior(&self, a: f64, b: f64) -> Option<(f64, f64)> {
+        let a_c_dist = (0.5 - a).abs();
+        let b_c_dist = (0.5 - b).abs();
+
+        if a < 0.0 || b < 0.0 || (a_c_dist.powi(2) + b_c_dist.powi(2)).sqrt() > 0.5 {
+            return None;
+        }
+
+        // a, b are identical to u, v coordinates;
+        // both are in fractional space
+        Some((a, b))
+    }
+}
+
+impl Hittable for Disc {
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
+        let demon = Vec3::dot(&self.normal, &ray.direction());
+
+        // ray is parallel to the plane; no hit
+        if demon.abs() < 1e-8 {
+            return None;
+        }
+
+        let t = (self.d - Vec3::dot(&self.normal, &Vec3::from(ray.origin()))) / demon;
+        if !ray_t.contains(t) {
+            return None;
+        }
+
+        // check if the hit point is within the planar shape using its planar coordinates
+        let intersection = ray.at(t);
+        let planar_hit_vec = intersection - self.corner;
+        let alpha = Vec3::dot(&self.w, &Vec3::cross(&planar_hit_vec, &self.v));
+        let beta = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hit_vec));
+
+        let Some((u, v)) = self.is_interior(alpha, beta) else {
+            return None;
+        };
+
+        Some(HitRecord::from_incoming_ray(
+            ray,
+            &intersection,
+            &self.normal,
+            t,
+            u,
+            v,
+            Rc::clone(&self.material),
+        ))
+    }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        Some(&self.bounding_box)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

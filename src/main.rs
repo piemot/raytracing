@@ -1,7 +1,7 @@
 use raytracing::{
     camera::AntialiasingType,
     export::PngWriter,
-    hittable::{HittableVec, Parallelogram},
+    hittable::{Disc, HittableVec, Parallelogram, Triangle},
     material::Lambertian,
     CameraBuilder, Color, Material, Point3, Texture, Vec3,
 };
@@ -44,7 +44,7 @@ fn main() {
         Vec3::new(0.0, 4.0, 0.0),
         left_red,
     )));
-    world.add(Rc::new(Parallelogram::new(
+    world.add(Rc::new(Triangle::new(
         Point3::new(-2.0, -2.0, 0.0),
         Vec3::new(4.0, 0.0, 0.0),
         Vec3::new(0.0, 4.0, 0.0),
@@ -62,7 +62,7 @@ fn main() {
         Vec3::new(0.0, 0.0, 4.0),
         upper_orange,
     )));
-    world.add(Rc::new(Parallelogram::new(
+    world.add(Rc::new(Disc::new(
         Point3::new(-2.0, -3.0, 5.0),
         Vec3::new(4.0, 0.0, 0.0),
         Vec3::new(0.0, 0.0, -4.0),
