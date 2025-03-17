@@ -12,6 +12,20 @@ impl BoundingBox3 {
     /// Create a bounding box with the provided intervals.
     /// Ensure that all intervals are positive (start <= end).
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
+        // no interval may be narrower than DELTA
+        const DELTA: f64 = 0.0001;
+
+        let expand = |int: Interval| {
+            if int.size() < DELTA {
+                int.expand(DELTA)
+            } else {
+                int
+            }
+        };
+
+        let x = expand(x);
+        let y = expand(y);
+        let z = expand(z);
         Self { x, y, z }
     }
 
@@ -38,14 +52,14 @@ impl BoundingBox3 {
         let x = Interval::positive(a.x(), b.x());
         let y = Interval::positive(a.y(), b.y());
         let z = Interval::positive(a.z(), b.z());
-        Self { x, y, z }
+        Self::new(x, y, z)
     }
 
     pub fn extending(a: &BoundingBox3, b: &BoundingBox3) -> Self {
         let x = Interval::surrounding(&a.x, &b.x);
         let y = Interval::surrounding(&a.y, &b.y);
         let z = Interval::surrounding(&a.z, &b.z);
-        Self { x, y, z }
+        Self::new(x, y, z)
     }
 
     pub fn extending_opt(a: Option<&BoundingBox3>, b: Option<&BoundingBox3>) -> Self {
@@ -138,11 +152,6 @@ impl BVHNode {
         }
 
         let axis = bbox.longest_axis();
-        /*
-        for (size_t object_index=start; object_index < end; object_index++)
-            bbox = aabb(bbox, objects[object_index]->bounding_box());
-         */
-        // let axis: Axis = random_range(0..=2).try_into().unwrap();
 
         let comparator = |a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>| Self::cmp_box(a, b, axis);
 
@@ -161,8 +170,6 @@ impl BVHNode {
                 (left, right)
             }
         };
-
-        // let bbox = BoundingBox3::extending_opt(left.bounding_box(), right.bounding_box());
 
         Self { left, right, bbox }
     }

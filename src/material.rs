@@ -12,6 +12,12 @@ pub struct MaterialResult {
 
 pub trait Material: std::fmt::Debug {
     fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult>;
+    fn into_mat(self) -> Rc<dyn Material>
+    where
+        Self: Sized + 'static,
+    {
+        Rc::new(self)
+    }
 }
 
 #[derive(Debug)]

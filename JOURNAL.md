@@ -643,3 +643,90 @@ With these formulas, an image of the world like this...
 can be rendered across a sphere!
 
 ![The image, rendered over a sphere](assets/earth.png)
+
+## Mar 10
+
+So far, spheres have been the only shape possible. It's time to implement some other options.
+
+### Parallelograms
+
+An obvious step would be to implement quadrilaterals - of which paralellograms strike a good
+balance of simplicity and utility.
+A flat paralellogram in 3D space is defined by an origin point $Q$ and two 3D vectors 
+$v$ and $u$ originating from $Q$.
+
+The corners of this parallelogram are easy to calculate; $Q + v$, $Q + u$, and $Q + v + u$.
+
+![The definition of a parallelogram](assets/03-10-parallelogram.svg)
+
+Parallelograms are 2D objects, and therefore flat; they have a width of 0 if 
+they lie exactly in one of the planes. This can cause issues with floating-point
+imprecision; rays could pass through the object because of tiny rounding errors. 
+In order to fix this, the bounding box will be slightly larger than the
+parallelogram itself - which shouldn't have much of a performance effect because 
+the bounding box is designed to just be an approximation of the object.
+
+### Parallelogram Intersections
+
+A parallelogram, or any planar/flat shape, can be thought of as a segment of a plane
+parallel to its face.
+
+![A 2D object on an infinite plane](assets/03-10-2d-plane.svg)
+
+Therefore, determining whether a ray intersects a 2D object takes two steps.
+1. Check if the ray intersects the plane containing the object
+2. Check if the ray touches the *part* of the plane with the object on it
+
+In order to check if the ray intersects a given plane, the implicit formula of a plane is used:
+
+$ Ax + By + Cz = D $
+
+where $A$, $B$, $C$, and $D$ are constants, and $x$, $y$, and $z$ are the coordinates of
+any point $(x, y, z)$ that lies on that plane. The plane is therefore the set of points
+$(x, y, z)$ that satisfy that equation.
+
+If $n$ is defined as a normal vector perpendicular to the plane, $n = (A, B, C)$,
+and $v$ is a vector from the origin to the point on the plane, ($v = (x, y, z)$),
+then the value $D = n \cdot v$ for any position on the plane. 
+[[https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/ray-planeintersection]]
+
+Determining the plane the object exists on is simple. Given the point $Q$ and the vectors $u$ and $v$,
+the normal vector to the plane is the cross product of $u$ and $v$: $n = u \times v$.
+With the normal vector of the plane and a point on the plane (which $Q$ is), 
+$D = n \cdot Q$.
+
+To determine whether the ray intersects the relevant *part* of the plane,
+the point $I$ at which the ray intersects the plane is compared to the 
+origin point $Q$ and the parallelogram's vectors $u$ and $v$:
+
+$ I = Q + \alpha u + \beta v $
+
+$\alpha$ and $\beta$ can be derived
+([[https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/derivingtheplanarcoordinates]])
+to find $\alpha = w \cdot (p \times v)$ and $\beta = w \cdot (u \times p)$, where 
+$p = I - Q$ (the vector from the origin to the intersection point),
+and $w$ is a vector constant representing the plane's basis frame, 
+which is constant to a given quadrilateral and equal to $\frac{n}{n \cdot n}$.
+
+Now, given $\alpha$ and $\beta$, since they're fractional coordinates, the ray intersects
+the parallelogram if $0 <= \alpha <= 1$ and $0 <= \beta <= 1$.
+
+Rendering some squares, shadows are falling on the far edges because the light is being
+blocked by the green central square. It's not super clear how the light originates, though -
+and I can't add any extra lights aside from the sky.
+
+![Rendered squares](assets/squares.png)
+
+## Mar 17
+
+### More Flat Shapes
+
+Extending the parallelogram interface to allow for more shapes is relatively simple.
+All of the ray intersection code is the same; the only difference is in finding which $\alpha$ and $\beta$
+values represent a valid part of that shape. Recalling that the valid area for a parallelogram is
+$(0 <= \alpha <= 1) \land (0 <= \beta <= 1)$ ("$\land$" represents "and" in logical arithmetic), 
+a disc could be represented as $\sqrt{\alpha ^ 2 + \beta ^ 2} < R$, where R is the radius 
+of the disc relative to the size of the u, v vectors.
+
+Similarly, a triangle could be represented as $(\alpha > 0) \land (\beta > 0) \land (\alpha + \beta < 1)$,
+which selects a triangle between points $Q$, $Q + u$, and $Q + v$ (see diagram above of these points).

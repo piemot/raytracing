@@ -1,4 +1,4 @@
-use crate::{Interval, Vec3};
+use crate::{texture::SolidColor, Interval, Vec3};
 use std::{fmt::Display, ops::AddAssign};
 
 use super::vec::normal::NormalizationState;
@@ -172,6 +172,10 @@ impl Color {
             g: self.g * rhs.g,
             b: self.b * rhs.b,
         }
+    }
+
+    pub fn solid_texture(self) -> SolidColor {
+        SolidColor::new(self)
     }
 }
 
