@@ -9,7 +9,7 @@ pub mod texture;
 
 pub use axis::Axis;
 
-pub use camera::{AntialiasingType, Camera, CameraBuilder};
+pub use camera::{AntialiasingType, Background, Camera, CameraBuilder};
 
 pub use hittable::{HitRecord, Hittable};
 

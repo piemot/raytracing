@@ -687,8 +687,8 @@ $(x, y, z)$ that satisfy that equation.
 
 If $n$ is defined as a normal vector perpendicular to the plane, $n = (A, B, C)$,
 and $v$ is a vector from the origin to the point on the plane, ($v = (x, y, z)$),
-then the value $D = n \cdot v$ for any position on the plane. 
-[[https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/ray-planeintersection]]
+then the value $D = n \cdot v$ 
+[for any position on the plane](https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/ray-planeintersection).
 
 Determining the plane the object exists on is simple. Given the point $Q$ and the vectors $u$ and $v$,
 the normal vector to the plane is the cross product of $u$ and $v$: $n = u \times v$.
@@ -701,8 +701,8 @@ origin point $Q$ and the parallelogram's vectors $u$ and $v$:
 
 $ I = Q + \alpha u + \beta v $
 
-$\alpha$ and $\beta$ can be derived
-([[https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/derivingtheplanarcoordinates]])
+$\alpha$ and $\beta$ can be 
+[derived](https://raytracing.github.io/books/RayTracingTheNextWeek.html#quadrilaterals/derivingtheplanarcoordinates)
 to find $\alpha = w \cdot (p \times v)$ and $\beta = w \cdot (u \times p)$, where 
 $p = I - Q$ (the vector from the origin to the intersection point),
 and $w$ is a vector constant representing the plane's basis frame, 
@@ -732,3 +732,40 @@ Similarly, a triangle could be represented as $(\alpha > 0) \land (\beta > 0) \l
 which selects a triangle between points $Q$, $Q + u$, and $Q + v$ (see diagram above of these points).
 
 ![Rendered squares, triangles, and discs](assets/shapes.png)
+
+### Lighting
+
+The end goal of lighting is to produce a [Cornell Box](https://en.wikipedia.org/wiki/Cornell_box),
+a test created as a physically modellable scene that can be compared against a rendered image.
+
+It consists of one light source, a green right wall, a left red wall, and
+various objects inside the box.
+
+To start, materials can be allowed to emit light by extending the `Material` trait to include
+an `emitted` method: 
+
+```rs
+pub trait Material {
+    fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult>;
+
+    fn emitted(&self, u: f64, v: f64, point: &Point3) -> Color;
+}
+```
+
+`emitted()` returns a color, which is added to the color of the scattered ray upon a bounce.
+This color could be brighter than pure white, which is useful when a light source is small 
+and reflections would dim it too much. This function has a default implementation that 
+returns black (`(0, 0, 0)`), so only light-emitting materials need to specify how they emit light.
+
+A simple diffuse light-emitting material can be implemented in the same way as the Lambertian material;
+instead of looking up scattered albedo values from a texture, it looks up the emission values.
+
+A yellow sphere with a black background and a light source shining towards it can be rendered like this:
+
+![A sphere with light shining towards it](assets/light.png)
+
+In this case, the light source is 10 times brighter than pure white.
+Since emission is per-material, any object can be emissive. For instance, a sphere could hang from the ceiling
+to illuminate from above as well:
+
+![A sphere with light shining towards it from the side and above](assets/light2.png)

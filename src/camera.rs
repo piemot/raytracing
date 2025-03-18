@@ -21,6 +21,8 @@ pub struct CameraBuilder<'a> {
     samples_per_px: u32,
     /// The maximum number of times a ray may bounce in a scene.
     max_depth: u32,
+    /// What to render if a ray doesn't hit anything
+    background: Background,
     /// The centre of the camera; where rays are shot from.
     camera_center: Point3,
     /// The point the camera is looking towards.
@@ -45,18 +47,22 @@ impl<'a> CameraBuilder<'a> {
         Self::default()
     }
 
-    fn add_error(&mut self, condition: bool, err: String) {
+    fn add_error(&mut self, err: String) {
+        self.errors.push(format!("CameraBuilder::{err}"));
+    }
+
+    fn error(&mut self, condition: bool, err: String) {
         if condition {
-            self.errors.push(format!("CameraBuilder::{err}"));
+            self.add_error(err);
         }
     }
 
     pub fn dimensions(mut self, width: u32, height: u32) -> Self {
-        self.add_error(
+        self.error(
             width <= 1,
             format!("dimensions: Invalid width: must be greater than 1, found {width}"),
         );
-        self.add_error(
+        self.error(
             height <= 1,
             format!("dimensions: Invalid height: must be greater than 1, found {height}"),
         );
@@ -67,11 +73,11 @@ impl<'a> CameraBuilder<'a> {
     }
 
     pub fn with_aspect_ratio(mut self, width: u32, aspect_ratio: f64) -> Self {
-        self.add_error(
+        self.error(
             width <= 1,
             format!("with_aspect_ratio: Invalid width: must be greater than 1, found {width}"),
         );
-        self.add_error(
+        self.error(
             !(0.1..=100.0).contains(&aspect_ratio),
             format!("with_aspect_ratio: Invalid aspect_ratio: must be between 0.1 and 100.0, found {aspect_ratio}"),
         );
@@ -83,7 +89,7 @@ impl<'a> CameraBuilder<'a> {
     }
 
     pub fn max_depth(mut self, depth: u32) -> Self {
-        self.add_error(
+        self.error(
             depth < 1,
             format!("max_depth: Invalid depth: must be at least 1, found {depth}"),
         );
@@ -91,8 +97,19 @@ impl<'a> CameraBuilder<'a> {
         self
     }
 
+    pub fn background(mut self, bg: Background) -> Self {
+        if let Background::Constant(col) = bg {
+            self.error(
+                !col.is_valid(),
+                format!("background: Invalid color {col:?} provided."),
+            );
+        }
+        self.background = bg;
+        self
+    }
+
     pub fn antialias(mut self, antialiasing_type: AntialiasingType, samples_per_px: u32) -> Self {
-        self.add_error(
+        self.error(
             samples_per_px < 1,
             format!(
                 "antialias: Invalid samples_per_px: must be at least 1, found {samples_per_px}"
@@ -109,7 +126,7 @@ impl<'a> CameraBuilder<'a> {
     }
 
     pub fn focal_length(mut self, length: f64) -> Self {
-        self.add_error(
+        self.error(
             length <= 0.0,
             format!("focal_length: Invalid length: must be greater than 0.0, found {length}"),
         );
@@ -118,7 +135,7 @@ impl<'a> CameraBuilder<'a> {
     }
 
     pub fn vfov(mut self, deg: f64) -> Self {
-        self.add_error(
+        self.error(
             !(0.01..360.0).contains(&deg),
             format!("vfov: Invalid deg: must be between 0.01 and 360.0, found {deg}"),
         );
@@ -137,7 +154,7 @@ impl<'a> CameraBuilder<'a> {
     }
 
     pub fn defocus_angle(mut self, angle: f64) -> Self {
-        self.add_error(
+        self.error(
             !(0.0..180.0).contains(&angle),
             format!("defocus_angle: Invalid angle: must be between 0.0 and 180.0, found {angle}"),
         );
@@ -151,7 +168,7 @@ impl<'a> CameraBuilder<'a> {
     }
 
     pub fn build(mut self) -> Result<Camera<'a>, Vec<String>> {
-        self.add_error(self.export_writer.is_none(),"build: Missing export format: include the `.writer()` parameter to specify the export format".to_string());
+        self.error(self.export_writer.is_none(),"build: Missing export format: include the `.writer()` parameter to specify the export format".to_string());
 
         if !self.errors.is_empty() {
             return Err(self.errors);
@@ -169,6 +186,7 @@ impl Default for CameraBuilder<'_> {
             antialiasing_type: AntialiasingType::Square,
             samples_per_px: 10,
             max_depth: 10,
+            background: Background::Sky,
             camera_center: Point3::origin(),
             camera_target: Point3::new(0.0, 0.0, -1.0),
             vup: Vec3::new(0.0, 1.0, 0.0).as_unit(),
@@ -187,6 +205,14 @@ pub enum AntialiasingType {
     Square,
     /// Sample points from an `r = 0.5px` disc centred on the pixel's centre
     Disc,
+}
+
+#[derive(Debug)]
+pub enum Background {
+    /// Produces a constant color across the background
+    Constant(Color),
+    /// Produce a sky gradient based on the shot ray's y-value
+    Sky,
 }
 
 #[derive(Debug)]
@@ -213,6 +239,8 @@ pub struct Camera<'a> {
     px_sample_scale: f64,
     /// The maximum number of times a ray may bounce in a scene.
     max_depth: u32,
+    /// What to render if a ray doesn't hit anything
+    background: Background,
     /// The variation in angle of fired rays through each pixel, in radians.
     defocus_angle: f64,
     /// A vector crossing half the width of the defocus disk.
@@ -252,6 +280,7 @@ impl<'a> Camera<'a> {
             camera_center,
             camera_target,
             vfov,
+            background,
             vup,
             antialiasing_type,
             samples_per_px,
@@ -317,6 +346,7 @@ impl<'a> Camera<'a> {
             samples_per_px,
             px_sample_scale,
             max_depth,
+            background,
             defocus_angle,
             defocus_disk_u,
             defocus_disk_v,
@@ -348,7 +378,7 @@ impl<'a> Camera<'a> {
 
                 for _ in 0..self.samples_per_px {
                     let ray = self.get_ray(i, j);
-                    px_color += Self::ray_color(&ray, self.max_depth, world);
+                    px_color += self.ray_color(&ray, self.max_depth, world);
                 }
 
                 px_color.set_brightness(self.px_sample_scale);
@@ -385,21 +415,31 @@ impl<'a> Camera<'a> {
         Ray4::new(ray_origin, ray_direction, random())
     }
 
-    fn ray_color(ray: &Ray4, depth: u32, world: &impl Hittable) -> Color {
+    fn ray_color(&self, ray: &Ray4, depth: u32, world: &impl Hittable) -> Color {
         if depth == 0 {
             // Exceeded the bounce depth limit :(
             return Color::black();
         }
 
-        if let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) {
-            if let Some(scatter) = hit.material().scatter(ray, &hit) {
-                let bounce_color = Camera::ray_color(&scatter.scattered, depth - 1, world);
-                return Color::mul(&scatter.attenuation, &bounce_color);
-            }
-            return Color::black();
-        }
+        let Some(hit) = world.hit(ray, Interval::new(0.001, f64::INFINITY)) else {
+            return match self.background {
+                Background::Constant(col) => col,
+                Background::Sky => Self::skybox_bg(ray),
+            };
+        };
 
-        // "sky" colouring
+        let emission_color = hit.material().emitted(hit.u(), hit.v(), &hit.point());
+        if let Some(scatter) = hit.material().scatter(ray, &hit) {
+            let bounce_color = self.ray_color(&scatter.scattered, depth - 1, world);
+            let scatter_color = Color::mul(&scatter.attenuation, &bounce_color);
+            Color::add(&emission_color, &scatter_color)
+        } else {
+            // something in the world is hit, but the scattered ray is invalid
+            emission_color
+        }
+    }
+
+    fn skybox_bg(ray: &Ray4) -> Color {
         let nd = ray.direction().as_unit();
         let intensity = (nd.y() + 1.0) * 0.5;
 

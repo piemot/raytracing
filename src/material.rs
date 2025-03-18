@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use rand::random;
 
-use crate::{texture::SolidColor, Color, HitRecord, Ray4, Texture, Vec3};
+use crate::{texture::SolidColor, Color, HitRecord, Point3, Ray4, Texture, Vec3};
 
 #[derive(Debug)]
 pub struct MaterialResult {
@@ -12,6 +12,10 @@ pub struct MaterialResult {
 
 pub trait Material: std::fmt::Debug {
     fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult>;
+    fn emitted(&self, _u: f64, _v: f64, _point: &Point3) -> Color {
+        Color::black()
+    }
+
     fn into_mat(self) -> Rc<dyn Material>
     where
         Self: Sized + 'static,
@@ -49,6 +53,30 @@ impl Material for Lambertian {
             attenuation: self.0.value(record.u(), record.v(), &record.point()),
             scattered,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct DiffuseLight(Rc<dyn Texture>);
+
+impl DiffuseLight {
+    pub fn new(texture: Rc<dyn Texture>) -> Self {
+        Self(texture)
+    }
+
+    pub fn solid(albedo: Color) -> Self {
+        Self(Rc::new(SolidColor::new(albedo)))
+    }
+}
+
+impl Material for DiffuseLight {
+    // DiffuseLight does not scatter.
+    fn scatter(&self, _ray_in: &Ray4, _record: &HitRecord) -> Option<MaterialResult> {
+        None
+    }
+
+    fn emitted(&self, u: f64, v: f64, point: &Point3) -> Color {
+        self.0.value(u, v, point)
     }
 }
 

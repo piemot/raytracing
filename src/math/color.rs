@@ -81,6 +81,16 @@ impl Color {
         }
     }
 
+    /// Create a new Color repesenting white, multiplied n times.
+    /// This is useful for representing a very bright light.
+    pub const fn over_white(n: f64) -> Self {
+        Self {
+            r: 1.0 * n,
+            g: 1.0 * n,
+            b: 1.0 * n,
+        }
+    }
+
     pub const fn red() -> Self {
         Self::new(1.0, 0.0, 0.0)
     }
@@ -164,6 +174,14 @@ impl Color {
         self.r *= brightness;
         self.g *= brightness;
         self.b *= brightness;
+    }
+
+    pub fn add(&self, rhs: &Color) -> Color {
+        Color {
+            r: self.r + rhs.r,
+            g: self.g + rhs.g,
+            b: self.b + rhs.b,
+        }
     }
 
     pub fn mul(&self, rhs: &Color) -> Color {
