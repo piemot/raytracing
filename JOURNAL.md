@@ -769,3 +769,23 @@ Since emission is per-material, any object can be emissive. For instance, a sphe
 to illuminate from above as well:
 
 ![A sphere with light shining towards it from the side and above](assets/light2.png)
+
+### Cornell Box (Part I)
+
+A box can be constructed out of five walls, and the light at the top of the box can consist
+of a sixth quadrilateral. 
+
+![A Cornell box](assets/cornell.png)
+
+The image is dim and noisy because it's not lit well; most rays miss the sole light source at the top of the box.
+To (somewhat) fix this, any rays that do hit the image above are multiplied _15 times_ so that they average out
+enough to see.
+
+### 3D Quads
+
+Usually, Cornell boxes contain rectangular prisms, set at angles.
+A 3D box can be represented as a 6-object-long `HittableVec` of `Parallelogram`s,
+one for each side of the box. Adding two of these boxes into the Cornell box scene
+(and doubling the strength of the light for better visibility), they render just as expected:
+
+![A cornell box with quads inside it](assets/cornell-2.png)

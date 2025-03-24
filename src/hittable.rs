@@ -206,6 +206,13 @@ impl HittableVec {
         }
     }
 
+    pub fn with_capacity(cap: usize) -> Self {
+        Self {
+            objects: Vec::with_capacity(cap),
+            bounding_box: None,
+        }
+    }
+
     pub fn add(&mut self, obj: Rc<dyn Hittable>) {
         self.bounding_box = match &self.bounding_box {
             Some(bbox) => Some(BoundingBox3::extending(bbox, obj.bounding_box().unwrap())),
@@ -339,6 +346,65 @@ impl Hittable for Parallelogram {
     fn bounding_box(&self) -> Option<&BoundingBox3> {
         Some(&self.bounding_box)
     }
+}
+
+pub fn box3(a: &Point3, b: &Point3, mat: Rc<dyn Material>) -> Rc<dyn Hittable> {
+    let mut sides = HittableVec::with_capacity(6);
+
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    let min = Point3::new(
+        f64::min(a.x(), b.x()),
+        f64::min(a.y(), b.y()),
+        f64::min(a.z(), b.z()),
+    );
+    let max = Point3::new(
+        f64::max(a.x(), b.x()),
+        f64::max(a.y(), b.y()),
+        f64::max(a.z(), b.z()),
+    );
+
+    let dx = Vec3::new(max.x() - min.x(), 0.0, 0.0);
+    let dy = Vec3::new(0.0, max.y() - min.y(), 0.0);
+    let dz = Vec3::new(0.0, 0.0, max.z() - min.z());
+
+    sides.add(Rc::new(Parallelogram::new(
+        Point3::new(min.x(), min.y(), max.z()),
+        dx,
+        dy,
+        Rc::clone(&mat),
+    )));
+    sides.add(Rc::new(Parallelogram::new(
+        Point3::new(max.x(), min.y(), max.z()),
+        -dz,
+        dy,
+        Rc::clone(&mat),
+    )));
+    sides.add(Rc::new(Parallelogram::new(
+        Point3::new(max.x(), min.y(), min.z()),
+        -dx,
+        dy,
+        Rc::clone(&mat),
+    )));
+    sides.add(Rc::new(Parallelogram::new(
+        Point3::new(min.x(), min.y(), min.z()),
+        dz,
+        dy,
+        Rc::clone(&mat),
+    )));
+    sides.add(Rc::new(Parallelogram::new(
+        Point3::new(min.x(), max.y(), max.z()),
+        dx,
+        -dz,
+        Rc::clone(&mat),
+    )));
+    sides.add(Rc::new(Parallelogram::new(
+        Point3::new(min.x(), min.y(), min.z()),
+        dx,
+        dz,
+        Rc::clone(&mat),
+    )));
+
+    Rc::new(sides)
 }
 
 // TODO: make constructor functions more ergonomic (f.e. define three points)
