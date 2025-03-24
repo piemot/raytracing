@@ -775,7 +775,7 @@ to illuminate from above as well:
 A box can be constructed out of five walls, and the light at the top of the box can consist
 of a sixth quadrilateral. 
 
-![A Cornell box](assets/cornell.png)
+![A Cornell box](assets/cornell-1.png)
 
 The image is dim and noisy because it's not lit well; most rays miss the sole light source at the top of the box.
 To (somewhat) fix this, any rays that do hit the image above are multiplied _15 times_ so that they average out
@@ -789,3 +789,49 @@ one for each side of the box. Adding two of these boxes into the Cornell box sce
 (and doubling the strength of the light for better visibility), they render just as expected:
 
 ![A cornell box with quads inside it](assets/cornell-2.png)
+
+## Mar 24
+
+### Instancing
+
+A useful trick that can be done with ray tracers is to create an *instance* of a
+`Hittable` primitive or set of `Hittable` primitives. This creates a lightweight copy of the primitive
+that can be easily translated or rotated. 
+
+The trick is that instead of directly rotating or translating the object itself, which would
+require a lot of calculations to move each point on the object, an incoming ray can instead be 
+moved temporarily in the inverse direction.
+
+For instance, take the scene below. The true box is at point `(1, 1)`, but the instance
+is imagined to be at point `(3, 1)`. If a ray comes in originating from `(2.5, 2)`,
+and is going to hit the instanced box, it can be translated so that its origin is at `(0.5, 2)`
+while the hit calculation takes place, then moved back afterwards.
+
+The utility of this method is that a box contains six `Parallelograms`, each with a point and 
+two vectors describing their position. Translating the box would therefore require up to 
+18 modifications, while translating the ray only affects its single origin point.
+
+![An example of instanced translation](assets/03-24-instance-translate.svg)
+
+Rotation is a bit more involved. The easiest way to calculate a rotation is to do so around an axis.
+This is because a rotation around a given axis only modifies the other two coordinates;
+rotation around the $z$ axis only changes the $x$ and $y$ coordinates of the rotated point.
+The trig to calculate this rotation is pretty simple, and results in:
+
+$ x^\prime = cos(\theta) \cdot x - sin(\theta) \cdot y $
+
+$ y^\prime = sin(\theta) \cdot x + cos(\theta) \cdot y $
+
+It works for any rotation, and doesn't require special cases for quadrants.
+The formulas for rotating around the other axes are [very similar](https://raytracing.github.io/books/RayTracingTheNextWeek.html#instances/instancerotation).
+
+Thinking of translation as a movement of the initial ray is okay, but the analogy starts to fall
+apart when it comes to rotation.
+What's really happening is a changing of coordinate systems. Instead of moving the ray's origin
+position by an offset, the ray is converted from "world space" into "object space".
+In object space, the intersection is found, and then the intersection point and normal direction
+are converted back into world space.
+
+Implementing this instancing, the final version of the classic Cornell box appears:
+
+![The Cornell box](assets/cornell-3.png)

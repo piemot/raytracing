@@ -1,4 +1,4 @@
-use crate::{Axis, HitRecord, Hittable, Interval, Point3, Ray3, Ray4};
+use crate::{Axis, HitRecord, Hittable, Interval, Point3, Ray3, Ray4, Vec3};
 use std::{cmp::Ordering, rc::Rc};
 
 #[derive(Debug, Clone)]
@@ -134,6 +134,37 @@ impl std::ops::Index<Axis> for BoundingBox3 {
             Axis::Y => self.y(),
             Axis::Z => self.z(),
         }
+    }
+}
+
+impl std::ops::Add<Vec3> for BoundingBox3 {
+    type Output = Self;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        Self::new(self.x + rhs.x(), self.y + rhs.y(), self.z + rhs.z())
+    }
+}
+
+impl std::ops::Add<BoundingBox3> for Vec3 {
+    type Output = BoundingBox3;
+
+    fn add(self, rhs: BoundingBox3) -> Self::Output {
+        rhs.add(self)
+    }
+}
+impl std::ops::Add<Vec3> for &BoundingBox3 {
+    type Output = BoundingBox3;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        BoundingBox3::new(self.x() + rhs.x(), self.y() + rhs.y(), self.z() + rhs.z())
+    }
+}
+
+impl std::ops::Add<&BoundingBox3> for Vec3 {
+    type Output = BoundingBox3;
+
+    fn add(self, rhs: &BoundingBox3) -> Self::Output {
+        rhs.add(self)
     }
 }
 

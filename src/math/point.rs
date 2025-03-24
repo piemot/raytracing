@@ -83,6 +83,16 @@ impl std::ops::Index<Axis> for Point3 {
     }
 }
 
+impl std::ops::IndexMut<Axis> for Point3 {
+    fn index_mut(&mut self, index: Axis) -> &mut Self::Output {
+        match index {
+            Axis::X => &mut self.x,
+            Axis::Y => &mut self.y,
+            Axis::Z => &mut self.z,
+        }
+    }
+}
+
 // Note that Point3 + Point3 ≠ Point3,
 // so Add<Point3> cannot be defined for Point3.
 

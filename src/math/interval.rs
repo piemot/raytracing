@@ -173,6 +173,38 @@ impl From<Interval> for RangeInclusive<f64> {
     }
 }
 
+impl std::ops::Add<f64> for Interval {
+    type Output = Self;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Self::new(self.start() + rhs, self.end() + rhs)
+    }
+}
+
+impl std::ops::Add<f64> for &Interval {
+    type Output = Interval;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Interval::new(self.start() + rhs, self.end() + rhs)
+    }
+}
+
+impl std::ops::Add<Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, rhs: Interval) -> Self::Output {
+        rhs.add(self)
+    }
+}
+
+impl std::ops::Add<&Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, rhs: &Interval) -> Self::Output {
+        rhs.add(self)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::ops::RangeBounds;

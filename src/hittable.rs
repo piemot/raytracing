@@ -1,8 +1,11 @@
-use std::{f64::consts::PI, rc::Rc};
+use std::{
+    f64::{self, consts::PI},
+    rc::Rc,
+};
 
 use crate::{
-    boundingbox::BoundingBox3, vec::Normalized, Interval, Material, Point2, Point3, Ray3, Ray4,
-    Vec3,
+    boundingbox::BoundingBox3, vec::Normalized, Axis, Interval, Material, Point2, Point3, Ray3,
+    Ray4, Vec3,
 };
 
 #[derive(Debug, Clone)]
@@ -90,6 +93,13 @@ pub trait Hittable: std::fmt::Debug {
 
     // can return None, but will never recieve any [hit()]s.
     fn bounding_box(&self) -> Option<&BoundingBox3>;
+
+    fn hittable(self) -> Rc<dyn Hittable>
+    where
+        Self: Sized + 'static,
+    {
+        Rc::new(self)
+    }
 }
 
 #[derive(Debug)]
@@ -593,6 +603,147 @@ impl Hittable for Disc {
             v,
             Rc::clone(&self.material),
         ))
+    }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        Some(&self.bounding_box)
+    }
+}
+
+#[derive(Debug)]
+pub struct Translate {
+    object: Rc<dyn Hittable>,
+    offset: Vec3,
+    bounding_box: BoundingBox3,
+}
+
+impl Translate {
+    pub fn new(object: Rc<dyn Hittable>, offset: Vec3) -> Self {
+        let bbox = object
+            .bounding_box()
+            .expect("Objects without bounding boxes should not be Translated")
+            + offset;
+        Self {
+            object,
+            offset,
+            bounding_box: bbox,
+        }
+    }
+}
+
+impl Hittable for Translate {
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
+        // Move the ray backwards by the offset
+        let offset_ray = Ray4::new(ray.origin() - self.offset, ray.direction(), ray.time());
+
+        // Determine whether an intersection exists along the offset ray (and if so, where)
+        let mut hit = self.object.hit(&offset_ray, ray_t)?;
+
+        // Move the intersection point forwards by the offset
+        hit.point = hit.point + self.offset;
+        Some(hit)
+    }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        Some(&self.bounding_box)
+    }
+}
+
+#[derive(Debug)]
+pub struct RotateY {
+    object: Rc<dyn Hittable>,
+    sin_theta: f64,
+    cos_theta: f64,
+    bounding_box: BoundingBox3,
+}
+
+impl RotateY {
+    pub fn new(object: Rc<dyn Hittable>, angle: f64) -> Self {
+        let sin_theta = angle.sin();
+        let cos_theta = angle.cos();
+        let bbox = object
+            .bounding_box()
+            .expect("Objects without bounding boxes should not be Rotated");
+
+        let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
+        let mut max = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = f64::from(i) * bbox.x().end() + f64::from(1 - i) * bbox.x().start();
+                    let y = f64::from(j) * bbox.y().end() + f64::from(1 - j) * bbox.y().start();
+                    let z = f64::from(k) * bbox.z().end() + f64::from(1 - k) * bbox.z().start();
+
+                    let newx = cos_theta * x + sin_theta * z;
+                    let newz = -sin_theta * x + cos_theta * z;
+
+                    let tester = Vec3::new(newx, y, newz);
+
+                    for c in Axis::iter() {
+                        min[c] = f64::min(min[c], tester[c]);
+                        max[c] = f64::max(max[c], tester[c]);
+                    }
+                }
+            }
+        }
+
+        Self {
+            object,
+            cos_theta,
+            sin_theta,
+            bounding_box: BoundingBox3::bounded_by(&min, &max),
+        }
+    }
+}
+
+impl Hittable for RotateY {
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
+        let Self {
+            cos_theta,
+            sin_theta,
+            ..
+        } = self;
+        // Transform the ray from world space to object space.
+
+        let origin = Point3::new(
+            (cos_theta * ray.origin().x()) - (sin_theta * ray.origin().z()),
+            ray.origin().y(),
+            (sin_theta * ray.origin().x()) + (cos_theta * ray.origin().z()),
+        );
+
+        let direction = Vec3::new(
+            (cos_theta * ray.direction().x()) - (sin_theta * ray.direction().z()),
+            ray.direction().y(),
+            (sin_theta * ray.direction().x()) + (cos_theta * ray.direction().z()),
+        );
+
+        let rotated_ray = Ray4::new(origin, direction, ray.time());
+
+        // Determine whether an intersection exists in object space (and if so, where).
+
+        let mut hit = self.object.hit(&rotated_ray, ray_t)?;
+
+        // Transform the intersection from object space back to world space.
+
+        let point = Point3::new(
+            (cos_theta * hit.point().x()) + (sin_theta * hit.point().z()),
+            hit.point().y(),
+            (-sin_theta * hit.point().x()) + (cos_theta * hit.point().z()),
+        );
+
+        let normal = Vec3::new(
+            (cos_theta * hit.normal().x()) + (sin_theta * hit.normal().z()),
+            hit.normal().y(),
+            (-sin_theta * hit.normal().x()) + (cos_theta * hit.normal().z()),
+        );
+
+        hit.point = point;
+        // the conversion from object space to world space should not affect the normalization
+        // state of the vector.
+        hit.normal = normal.assert_is_normalized();
+
+        Some(hit)
     }
 
     fn bounding_box(&self) -> Option<&BoundingBox3> {

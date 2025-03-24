@@ -1,9 +1,9 @@
 use raytracing::{
     camera::AntialiasingType,
     export::PngWriter,
-    hittable::{box3, HittableVec, Parallelogram},
+    hittable::{box3, HittableVec, Parallelogram, RotateY, Translate},
     material::{DiffuseLight, Lambertian},
-    Background, CameraBuilder, Color, Material, Point3, Texture, Vec3,
+    Background, CameraBuilder, Color, Hittable, Material, Point3, Texture, Vec3,
 };
 use std::{io, rc::Rc};
 
@@ -70,16 +70,23 @@ fn main() {
         Rc::clone(&white),
     )));
 
-    world.add(box3(
-        &Point3::new(130.0, 0.0, 65.0),
-        &Point3::new(295.0, 165.0, 230.0),
+    let box1 = box3(
+        &Point3::origin(),
+        &Point3::new(165.0, 330.0, 165.0),
         Rc::clone(&white),
-    ));
-    world.add(box3(
-        &Point3::new(265.0, 0.0, 295.0),
-        &Point3::new(430.0, 330.0, 460.0),
+    );
+    let box1 = RotateY::new(box1, 15.0f64.to_radians()).hittable();
+    let box1 = Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)).hittable();
+    world.add(box1);
+
+    let box2 = box3(
+        &Point3::origin(),
+        &Point3::new(165.0, 165.0, 165.0),
         Rc::clone(&white),
-    ));
+    );
+    let box2 = RotateY::new(box2, -18.0f64.to_radians()).hittable();
+    let box2 = Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)).hittable();
+    world.add(box2);
 
     cam.render(&world);
 }
