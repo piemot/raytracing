@@ -306,10 +306,8 @@ impl<'a> Camera<'a> {
 
         // Calculate the u, v, w unit basis vectors for the camera coordinate frame.
         let w = (camera_center - camera_target).as_unit();
-        let u = vup.cross(&w.into()).as_unit();
-        // cross product of unit vectors is a unit vector
-        // TODO: add this as a specialiization in the [`Vec3::cross()`] definition
-        let v = w.cross(&u.into()).assert_is_normalized();
+        let u = vup.cross(&w.into());
+        let v = w.cross(&u.into());
 
         // A 3d vector pointing across the "top" of the viewport
         let viewport_u = viewport_width * u;

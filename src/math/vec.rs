@@ -122,17 +122,6 @@ impl<T: NormalizationState> Vec3<T> {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
-    /// Returns the cross product of two [`Vec3`]s.
-    #[inline]
-    pub fn cross(&self, rhs: &Vec3) -> Vec3 {
-        Vec3 {
-            x: self.y * rhs.z - self.z * rhs.y,
-            y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x,
-            normalized: PhantomData,
-        }
-    }
-
     /// Returns true if the vector is close to zero (within `1e-8`) in all dimensions.
     pub fn near_zero(&self) -> bool {
         const THRESHOLD: f64 = 1e-8;
@@ -166,6 +155,17 @@ impl Vec3<Unknown> {
     pub fn reflect(&self, normal: &Vec3<Normalized>) -> Vec3 {
         let mul = 2.0 * Vec3::dot(self, normal);
         *self - normal * mul
+    }
+
+    /// Returns the cross product of two [`Vec3`]s.
+    #[inline]
+    pub fn cross(&self, rhs: &Vec3) -> Vec3 {
+        Vec3 {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+            normalized: PhantomData,
+        }
     }
 
     /// Create a new Vec3, pointing in a random direction between
@@ -276,6 +276,17 @@ impl Vec3<Normalized> {
         let rayout_parallel = -(1.0 - rayout_perpendicular.len_squared()).abs().sqrt() * normal;
 
         rayout_perpendicular + rayout_parallel
+    }
+
+    /// Returns the cross product of two normalized [`Vec3`]s, which is itself a normalized vector.
+    #[inline]
+    pub fn cross(&self, rhs: &Vec3<Normalized>) -> Vec3<Normalized> {
+        Vec3 {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+            normalized: PhantomData,
+        }
     }
 }
 

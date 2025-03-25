@@ -283,7 +283,7 @@ impl Parallelogram {
 
         let bounding_box = BoundingBox3::extending(&diag_1, &diag_2);
 
-        let n = Vec3::cross(&u, &v);
+        let n = u.cross(&v);
         let normal = n.as_unit();
         let d = Vec3::dot(&normal, &Vec3::from(corner));
 
@@ -337,8 +337,8 @@ impl Hittable for Parallelogram {
         // check if the hit point is within the planar shape using its planar coordinates
         let intersection = ray.at(t);
         let planar_hit_vec = intersection - self.corner;
-        let alpha = Vec3::dot(&self.w, &Vec3::cross(&planar_hit_vec, &self.v));
-        let beta = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hit_vec));
+        let alpha = Vec3::dot(&self.w, &planar_hit_vec.cross(&self.v));
+        let beta = Vec3::dot(&self.w, &self.u.cross(&planar_hit_vec));
 
         let Some((u, v)) = self.is_interior(alpha, beta) else {
             return None;
@@ -439,7 +439,7 @@ impl Triangle {
 
         let bounding_box = BoundingBox3::extending(&diag_1, &diag_2);
 
-        let n = Vec3::cross(&u, &v);
+        let n = u.cross(&v);
         let normal = n.as_unit();
         let d = Vec3::dot(&normal, &Vec3::from(corner));
 
@@ -491,8 +491,8 @@ impl Hittable for Triangle {
         // check if the hit point is within the planar shape using its planar coordinates
         let intersection = ray.at(t);
         let planar_hit_vec = intersection - self.corner;
-        let alpha = Vec3::dot(&self.w, &Vec3::cross(&planar_hit_vec, &self.v));
-        let beta = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hit_vec));
+        let alpha = Vec3::dot(&self.w, &planar_hit_vec.cross(&self.v));
+        let beta = Vec3::dot(&self.w, &self.u.cross(&planar_hit_vec));
 
         let Some((u, v)) = self.is_interior(alpha, beta) else {
             return None;
@@ -534,7 +534,7 @@ impl Disc {
 
         let bounding_box = BoundingBox3::extending(&diag_1, &diag_2);
 
-        let n = Vec3::cross(&u, &v);
+        let n = u.cross(&v);
         let normal = n.as_unit();
         let d = Vec3::dot(&normal, &Vec3::from(corner));
 
@@ -589,8 +589,8 @@ impl Hittable for Disc {
         // check if the hit point is within the planar shape using its planar coordinates
         let intersection = ray.at(t);
         let planar_hit_vec = intersection - self.corner;
-        let alpha = Vec3::dot(&self.w, &Vec3::cross(&planar_hit_vec, &self.v));
-        let beta = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hit_vec));
+        let alpha = Vec3::dot(&self.w, &planar_hit_vec.cross(&self.v));
+        let beta = Vec3::dot(&self.w, &self.u.cross(&planar_hit_vec));
 
         let Some((u, v)) = self.is_interior(alpha, beta) else {
             return None;
