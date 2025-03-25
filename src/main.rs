@@ -1,7 +1,7 @@
 use raytracing::{
     camera::AntialiasingType,
     export::PngWriter,
-    hittable::{box3, HittableVec, Parallelogram, RotateY, Translate},
+    hittable::{box3, ConstantMedium, HittableVec, Parallelogram, RotateY, Translate},
     material::{DiffuseLight, Lambertian},
     Background, CameraBuilder, Color, Hittable, Material, Point3, Texture, Vec3,
 };
@@ -31,7 +31,7 @@ fn main() {
     let green =
         Lambertian::new(Color::new(0.12, 0.45, 0.15).solid_texture().into_texture()).into_mat();
     let light =
-        DiffuseLight::new(Color::over_white(30.0).solid_texture().into_texture()).into_mat();
+        DiffuseLight::new(Color::over_white(15.0).solid_texture().into_texture()).into_mat();
 
     world.add(Rc::new(Parallelogram::new(
         Point3::new(555.0, 0.0, 0.0),
@@ -46,9 +46,9 @@ fn main() {
         Rc::clone(&red),
     )));
     world.add(Rc::new(Parallelogram::new(
-        Point3::new(343.0, 554.0, 332.0),
-        Vec3::new(-130.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, -105.0),
+        Point3::new(113.0, 554.0, 127.0),
+        Vec3::new(330.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 305.0),
         Rc::clone(&light),
     )));
     world.add(Rc::new(Parallelogram::new(
@@ -77,7 +77,7 @@ fn main() {
     );
     let box1 = RotateY::new(box1, 15.0f64.to_radians()).hittable();
     let box1 = Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)).hittable();
-    world.add(box1);
+    world.add(ConstantMedium::colored(box1, 0.01, Color::black()).hittable());
 
     let box2 = box3(
         &Point3::origin(),
@@ -86,7 +86,7 @@ fn main() {
     );
     let box2 = RotateY::new(box2, -18.0f64.to_radians()).hittable();
     let box2 = Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)).hittable();
-    world.add(box2);
+    world.add(ConstantMedium::colored(box2, 0.01, Color::white()).hittable());
 
     cam.render(&world);
 }

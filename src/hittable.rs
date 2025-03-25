@@ -3,9 +3,11 @@ use std::{
     rc::Rc,
 };
 
+use rand::random;
+
 use crate::{
-    boundingbox::BoundingBox3, vec::Normalized, Axis, Interval, Material, Point2, Point3, Ray3,
-    Ray4, Vec3,
+    boundingbox::BoundingBox3, material::Isotropic, texture::Texture, vec::Normalized, Axis, Color,
+    Interval, Material, Point2, Point3, Ray3, Ray4, Vec3,
 };
 
 #[derive(Debug, Clone)]
@@ -748,6 +750,79 @@ impl Hittable for RotateY {
 
     fn bounding_box(&self) -> Option<&BoundingBox3> {
         Some(&self.bounding_box)
+    }
+}
+
+#[derive(Debug)]
+pub struct ConstantMedium {
+    boundary: Rc<dyn Hittable>,
+    /// equal to -1.0 / density
+    inv_density: f64,
+    phase_fn: Rc<dyn Material>,
+}
+
+impl ConstantMedium {
+    pub fn new(boundary: Rc<dyn Hittable>, density: f64, texture: Rc<dyn Texture>) -> Self {
+        Self {
+            boundary,
+            inv_density: -1.0 / density,
+            phase_fn: Isotropic::new(texture).into_mat(),
+        }
+    }
+
+    pub fn colored(boundary: Rc<dyn Hittable>, density: f64, color: Color) -> Self {
+        Self {
+            boundary,
+            inv_density: -1.0 / density,
+            phase_fn: Isotropic::colored(color).into_mat(),
+        }
+    }
+}
+
+impl Hittable for ConstantMedium {
+    fn hit(&self, ray: &Ray4, ray_t: Interval) -> Option<HitRecord> {
+        let mut rec1 = self.boundary.hit(ray, Interval::universe())?;
+        let mut rec2 = self
+            .boundary
+            .hit(ray, Interval::new(rec1.t + 0.0001, f64::INFINITY))?;
+
+        if rec1.t < *ray_t.start() {
+            rec1.t = *ray_t.start();
+        }
+        if rec2.t > *ray_t.end() {
+            rec2.t = *ray_t.end();
+        }
+
+        if rec1.t >= rec2.t {
+            return None;
+        }
+        if rec1.t < 0.0 {
+            rec1.t = 0.0;
+        }
+
+        let ray_len = ray.direction().len();
+        let dist_inside_boundary = (rec2.t - rec1.t) * ray_len;
+        let hit_dist = self.inv_density * f64::ln(random());
+
+        if hit_dist > dist_inside_boundary {
+            return None;
+        }
+
+        let t = rec1.t + hit_dist / ray_len;
+
+        Some(HitRecord {
+            t,
+            point: ray.at(t),
+            normal: Vec3::new(1.0, 0.0, 0.0).assert_is_normalized(), // arbitrary
+            front_face: true,                                        // arbitrary
+            material: Rc::clone(&self.phase_fn),
+            u: f64::NAN,
+            v: f64::NAN,
+        })
+    }
+
+    fn bounding_box(&self) -> Option<&BoundingBox3> {
+        self.boundary.bounding_box()
     }
 }
 

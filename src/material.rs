@@ -168,3 +168,28 @@ impl Material for Dielectric {
         })
     }
 }
+
+#[derive(Debug)]
+pub struct Isotropic(Rc<dyn Texture>);
+
+impl Isotropic {
+    pub fn new(texture: Rc<dyn Texture>) -> Self {
+        Self(texture)
+    }
+
+    pub fn colored(color: Color) -> Self {
+        Self(SolidColor::new(color).into_texture())
+    }
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult> {
+        let scattered = Ray4::new(record.point(), Vec3::random_in_unit_sphere(), ray_in.time());
+        let attenuation = self.0.value(record.u(), record.v(), &record.point());
+
+        Some(MaterialResult {
+            attenuation,
+            scattered,
+        })
+    }
+}

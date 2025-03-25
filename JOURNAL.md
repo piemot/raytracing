@@ -416,7 +416,7 @@ Since motion occurs over time, I'll need a 4-dimensional Ray struct to simulate 
 The 4th dimension involved is time; a 4D ray can store what time it's being sent at.
 
 This allows the calculation of not only the intersection in space, but also in time.
-A rary projected at a given time may not intersect an object.
+A ray projected at a given time may not intersect the same object it intersects at a different time.
 
 The current implementation of motion blur assumes that all objects move linearly 
 across the frame, which isn't entirely accurate to a scene like depicted with balls
@@ -462,7 +462,7 @@ or `Some(details)` (the ray did hit, and all the details of the hit are provided
 Later, I'll need to create another struct that _does_ implement `Hittable` to proxy
 the events.
 
-The simplest way to create AABBs is to constrruct them based on the idea that a
+The simplest way to create AABBs is to construct them based on the idea that a
 $n$-dimensional rectangle (i.e. a rectangle or rectangular prism) is composed of $n$ 
 intervals (for instance, `(2.0, 3.0)`) - one for each axis. Given this, a bounding box
 is just the overlap of the intervals, which forms a rectangle in 2d space
@@ -595,7 +595,7 @@ starts to happen.
 ![Two checkered spheres on top of each other](assets/checker-spheres.png)
 
 The checkerboard suddenly reverses color at certain points, forming lines around the circumference
-of the spheres. This happens because the checkerboard textuer is a *3D* texture; it's influenced by 
+of the spheres. This happens because the checkerboard texture is a *3D* texture; it's influenced by 
 the $y$-position as well as $x$ and $z$. What happens if this influence is removed?
 
 ![Two checkered spheres on top of each other](assets/checker-spheres-y.png)
@@ -626,7 +626,7 @@ is the angle upwards from the bottom pole of the sphere, and $\phi$ is the angle
 around the $x$-axis, starting at -$x$ and moving towards +$z$.
 Mapping $\theta$ to $u$ and $\phi$ to $v$ across the range [0, 1] (with $(0, 0)$ 
 in the $uv$ space representing the *bottom-left* corner), and using a lot of 
-trigonometry, a point on the unit sphere can return $(u, v)$ values rarnging from 0 to 1.
+trigonometry, a point on the unit sphere can return $(u, v)$ values ranging from 0 to 1.
 
 Again by convention, $u$ and $v$ values range from 0.0 to 1.0. Converting a pixel $(i, j)$ in 
 texture space on an $N_x$ by $N_y$ image to a $(u, v)$ value can be done with a fractional
@@ -835,3 +835,26 @@ are converted back into world space.
 Implementing this instancing, the final version of the classic Cornell box appears:
 
 ![The Cornell box](assets/cornell-3.png)
+
+### Volumes
+
+A volume, or participating media, is an object that renders somewhat like smoke or fog.
+At constant density, it can be represented by a surface that may or may not exist for each
+point inside the volume.
+
+![An example volume](assets/03-24-volume.svg)
+
+In the diagram above, the orange ray is able to pass entirely through the volume,
+while the other rays are diffracted in some way. They may be diffracted backwards,
+or their path may just be altered slightly.
+
+In code, a `ConstantMedium` uses another `Hittable` object as its boundary.
+The distance at which the ray scatters is equal to $-\frac{1}{D} \times \ln(R)$,
+where $D$ is the density of the object and $R$ is a random number from `0..1`.
+
+The refraction is isotropic, meaning that it retuns a vector in the unit sphere.
+Rays are refracted equally in all directions at the same speed.
+
+Putting this together, a few foggy boxes in the Cornell box appear like this: 
+
+![Foggy boxes in a Cornell box](assets/cornell-4.png)
