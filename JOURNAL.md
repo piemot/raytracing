@@ -858,3 +858,19 @@ Rays are refracted equally in all directions at the same speed.
 Putting this together, a few foggy boxes in the Cornell box appear like this: 
 
 ![Foggy boxes in a Cornell box](assets/cornell-4.png)
+
+## Mar 25
+
+That pretty much wraps up the second book! 
+Just to finish things off, I'll add a few things that have been annoying me for a while.
+
+### 2D shape constructors
+
+Discs and triangles are currently specified by their corner and two vectors. 
+This way of specifying their positions is difficult to understand when it comes to discs;
+instead of specifying the disc itself a user has to specify the specifications of a
+rectangle inscribed around the disc.
+
+To fix this, I've added some conversion code so that points can be specified more easily:
+
+![Old and new ways of specifying discs and triangles](assets/03-25-shapes.svg)

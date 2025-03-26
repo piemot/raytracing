@@ -419,7 +419,6 @@ pub fn box3(a: &Point3, b: &Point3, mat: Rc<dyn Material>) -> Rc<dyn Hittable> {
     Rc::new(sides)
 }
 
-// TODO: make constructor functions more ergonomic (f.e. define three points)
 #[derive(Debug)]
 pub struct Triangle {
     corner: Point3,
@@ -455,6 +454,15 @@ impl Triangle {
             material,
             bounding_box,
         }
+    }
+
+    pub fn from_points(
+        corner1: Point3,
+        corner2: Point3,
+        corner3: Point3,
+        material: Rc<dyn Material>,
+    ) -> Self {
+        Self::new(corner1, corner2 - corner1, corner3 - corner1, material)
     }
 
     /// Checks whether the object is hit, assuming the plane it exists on is hit
@@ -514,7 +522,6 @@ impl Hittable for Triangle {
     }
 }
 
-// TODO: make constructor functions more ergonomic (f.e. define center, radius, etc.)
 #[derive(Debug)]
 pub struct Disc {
     corner: Point3,
@@ -544,6 +551,32 @@ impl Disc {
             corner,
             u,
             v,
+            d,
+            w,
+            normal,
+            material,
+            bounding_box,
+        }
+    }
+
+    /// Define a [`Disc`] by its center and radius vectors `u` and `v`.
+    pub fn from_center(center: Point3, u: Vec3, v: Vec3, material: Rc<dyn Material>) -> Self {
+        let diag_1 = BoundingBox3::bounded_by(&(center - u - v), &(center + u + v));
+        let diag_2 = BoundingBox3::bounded_by(&(center + u - v), &(center - u + v));
+
+        let bounding_box = BoundingBox3::extending(&diag_1, &diag_2);
+
+        let u2: Vec3 = u * 2;
+        let n = u2.cross(&(2 * v));
+        let normal = n.as_unit();
+        let d = Vec3::dot(&normal, &Vec3::from(center - u - v));
+
+        let w = n / Vec3::dot(&n, &n);
+
+        Self {
+            corner: center - u - v,
+            u: u * 2,
+            v: v * 2,
             d,
             w,
             normal,
