@@ -306,8 +306,8 @@ impl<'a> Camera<'a> {
 
         // Calculate the u, v, w unit basis vectors for the camera coordinate frame.
         let w = (camera_center - camera_target).as_unit();
-        let u = vup.cross(&w.into());
-        let v = w.cross(&u.into());
+        let u = vup.cross(&w);
+        let v = w.cross(&u);
 
         // A 3d vector pointing across the "top" of the viewport
         let viewport_u = viewport_width * u;

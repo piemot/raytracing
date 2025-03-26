@@ -77,7 +77,7 @@ impl ImageWriter for PngWriter<'_> {
     fn write(&mut self, colors: &[Color]) -> Result<(), Box<dyn Error>> {
         if let PngWriter::Ready(w) = self {
             let mut buf: Vec<u8> = Vec::with_capacity(colors.len() * 3);
-            buf.extend(colors.into_iter().flat_map(|c| c.as_rgb_ints()));
+            buf.extend(colors.iter().flat_map(|c| c.as_rgb_ints()));
             w.write_image_data(&buf)?;
             Ok(())
         } else {

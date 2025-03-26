@@ -12,6 +12,7 @@ use normal::NormalizationState;
 pub use normal::{Normalized, Unknown};
 
 /// Represents a vector in 3 dimensional space, with its origin at (0, 0, 0).
+///
 /// Despite the similar naming, a [`Vec3`] is **very different** from a [`std::vec::Vec`].
 /// A [`Vec3`] represents a vector in the mathematical sense; it can be
 /// visualized as an arrow from (0, 0, 0) to (x, y, z) in a 3d plane.
@@ -119,7 +120,7 @@ impl<T: NormalizationState> Vec3<T> {
     /// Returns the dot product of two [`Vec3`]s.
     #[inline]
     pub fn dot<A: NormalizationState>(&self, rhs: &Vec3<A>) -> f64 {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+        self.x.mul_add(rhs.x, self.y.mul_add(rhs.y, self.z * rhs.z))
     }
 
     /// Returns true if the vector is close to zero (within `1e-8`) in all dimensions.
@@ -161,9 +162,9 @@ impl Vec3<Unknown> {
     #[inline]
     pub fn cross(&self, rhs: &Vec3) -> Vec3 {
         Vec3 {
-            x: self.y * rhs.z - self.z * rhs.y,
-            y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x,
+            x: self.y.mul_add(rhs.z, -(self.z * rhs.y)),
+            y: self.z.mul_add(rhs.x, -(self.x * rhs.z)),
+            z: self.x.mul_add(rhs.y, -(self.y * rhs.x)),
             normalized: PhantomData,
         }
     }
@@ -282,9 +283,9 @@ impl Vec3<Normalized> {
     #[inline]
     pub fn cross(&self, rhs: &Vec3<Normalized>) -> Vec3<Normalized> {
         Vec3 {
-            x: self.y * rhs.z - self.z * rhs.y,
-            y: self.z * rhs.x - self.x * rhs.z,
-            z: self.x * rhs.y - self.y * rhs.x,
+            x: self.y.mul_add(rhs.z, -(self.z * rhs.y)),
+            y: self.z.mul_add(rhs.x, -(self.x * rhs.z)),
+            z: self.x.mul_add(rhs.y, -(self.y * rhs.x)),
             normalized: PhantomData,
         }
     }

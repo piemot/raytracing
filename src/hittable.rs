@@ -204,9 +204,9 @@ pub struct HittableVec {
     pub(super) bounding_box: Option<BoundingBox3>,
 }
 
-impl Into<Vec<Rc<dyn Hittable>>> for HittableVec {
-    fn into(self) -> Vec<Rc<dyn Hittable>> {
-        self.objects
+impl From<HittableVec> for Vec<Rc<dyn Hittable>> {
+    fn from(val: HittableVec) -> Self {
+        val.objects
     }
 }
 
@@ -340,9 +340,7 @@ impl Hittable for Parallelogram {
         let alpha = Vec3::dot(&self.w, &planar_hit_vec.cross(&self.v));
         let beta = Vec3::dot(&self.w, &self.u.cross(&planar_hit_vec));
 
-        let Some((u, v)) = self.is_interior(alpha, beta) else {
-            return None;
-        };
+        let (u, v) = self.is_interior(alpha, beta)?;
 
         Some(HitRecord::from_incoming_ray(
             ray,
@@ -502,9 +500,7 @@ impl Hittable for Triangle {
         let alpha = Vec3::dot(&self.w, &planar_hit_vec.cross(&self.v));
         let beta = Vec3::dot(&self.w, &self.u.cross(&planar_hit_vec));
 
-        let Some((u, v)) = self.is_interior(alpha, beta) else {
-            return None;
-        };
+        let (u, v) = self.is_interior(alpha, beta)?;
 
         Some(HitRecord::from_incoming_ray(
             ray,
@@ -625,9 +621,7 @@ impl Hittable for Disc {
         let alpha = Vec3::dot(&self.w, &planar_hit_vec.cross(&self.v));
         let beta = Vec3::dot(&self.w, &self.u.cross(&planar_hit_vec));
 
-        let Some((u, v)) = self.is_interior(alpha, beta) else {
-            return None;
-        };
+        let (u, v) = self.is_interior(alpha, beta)?;
 
         Some(HitRecord::from_incoming_ray(
             ray,

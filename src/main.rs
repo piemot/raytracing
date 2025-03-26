@@ -3,7 +3,7 @@ use raytracing::{
     export::PngWriter,
     hittable::{Disc, HittableVec, Parallelogram, Triangle},
     material::Lambertian,
-    CameraBuilder, Color, Material, Point3, Texture, Vec3,
+    CameraBuilder, Color, Material as _, Point3, Texture as _, Vec3,
 };
 use std::{io, rc::Rc};
 

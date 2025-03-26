@@ -12,6 +12,7 @@ use super::{
 };
 
 /// Represents a vector in 2 dimensional space, with its origin at (0, 0).
+///
 /// Despite the similar naming, a [`Vec2`] is **very different** from a [`std::vec::Vec`].
 /// A [`Vec2`] represents a vector in the mathematical sense; it can be
 /// visualized as an arrow from (0, 0) to (x, y) in a 2d plane.
@@ -102,7 +103,7 @@ impl<T: NormalizationState> Vec2<T> {
     /// This is required to calculate the true length of the vector.
     #[inline]
     pub fn len_squared(&self) -> f64 {
-        self.x * self.x + self.y * self.y
+        self.x.mul_add(self.x, self.y * self.y)
     }
 
     /// Returns the length of the vector.
@@ -113,7 +114,7 @@ impl<T: NormalizationState> Vec2<T> {
     /// Returns the dot product of two [`Vec2`]s.
     #[inline]
     pub fn dot(&self, rhs: &Vec2) -> f64 {
-        self.x * rhs.x + self.y * rhs.y
+        self.x.mul_add(rhs.x, self.y * rhs.y)
     }
 
     /// Returns true if the vector is close to zero (within `1e-8`) in all dimensions.

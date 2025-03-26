@@ -80,7 +80,11 @@ pub struct ImageTexture {
 
 impl ImageTexture {
     pub fn new(image_data: Vec<u8>, dimensions: (u32, u32)) -> Self {
-        assert_eq!(image_data.len(), (dimensions.0 * dimensions.1 * 3) as usize);
+        assert_eq!(
+            image_data.len(),
+            (dimensions.0 * dimensions.1 * 3) as usize,
+            "sanity check; image_data.len() = # of pixels * 3 channels per pixel"
+        );
         Self {
             image_data,
             width: dimensions.0,
@@ -92,13 +96,14 @@ impl ImageTexture {
         decoder.set_transformations(png::Transformations::normalize_to_color8());
         let mut reader = decoder.read_info().unwrap();
 
-        if reader.info().frame_control.is_some() {
-            panic!("Cannot accept APNGs.")
-        }
-
-        if !matches!(reader.info().color_type, png::ColorType::Rgb) {
-            panic!("Must be 8-bit PNG.")
-        }
+        assert!(
+            reader.info().frame_control.is_none(),
+            "Cannot accept APNGs."
+        );
+        assert!(
+            matches!(reader.info().color_type, png::ColorType::Rgb),
+            "Must be 8-bit PNG."
+        );
 
         let mut buf = vec![0; reader.output_buffer_size()];
         reader.next_frame(&mut buf).unwrap();
