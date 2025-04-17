@@ -1,6 +1,7 @@
 pub mod axis;
 pub mod boundingbox;
 pub mod camera;
+pub mod config;
 pub mod export;
 pub mod hittable;
 pub mod material;

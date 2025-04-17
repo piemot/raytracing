@@ -874,3 +874,21 @@ rectangle inscribed around the disc.
 To fix this, I've added some conversion code so that points can be specified more easily:
 
 ![Old and new ways of specifying discs and triangles](assets/03-25-shapes.svg)
+
+### Animation (minor tangent)
+
+I _was_ going to implement more forms of animation than linear,
+but then I thought for a second. In all the scenes rendered so
+far, the shutter speed of the simulated camera has been a standard small
+value - probably something near 1/20th to 1/40th of a second.
+
+Assuming a ball weighs 0.5kg and falls from 0.5m to 0.0m
+across 1/20th of a second, it's travelling at a speed of
+$v=\frac{d}{t}=\frac{0.5}{0.05}=10.0 \frac{m}{s}$.
+By the time it reaches the ground, it would accelerate
+due to gravity to only $\sqrt{10^2 + 2(9.8)(0.5)} = 10.48 \frac{m}{s}$.
+This difference is barely noticeable.
+
+Maybe in the future a scene will pop up that makes use of
+animation, and I'll implement it then - for now I don't 
+know what I'd even do with it.
