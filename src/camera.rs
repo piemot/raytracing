@@ -237,6 +237,10 @@ pub struct Camera<'a> {
     /// A fraction (`0.0..=1.0`) to multiply each sample by for antialiasing.
     /// Should be equal to `1.0 / samples_per_px`.
     px_sample_scale: f64,
+    /// The square root of [`Self::samples_per_px`]
+    sqrt_spp: u32,
+    /// `1.0 / Self::sqrt_spp`
+    sqrt_spp_scale: f64,
     /// The maximum number of times a ray may bounce in a scene.
     max_depth: u32,
     /// What to render if a ray doesn't hit anything
@@ -331,7 +335,11 @@ impl<'a> Camera<'a> {
         let defocus_disk_v = v * defocus_radius;
 
         // |> Antialiasing <|
+        let sqrt_spp = f64::from(samples_per_px).sqrt() as u32;
+        let samples_per_px = sqrt_spp * sqrt_spp;
+
         let px_sample_scale = 1.0 / f64::from(samples_per_px);
+        let sqrt_spp_scale = 1.0 / f64::from(sqrt_spp);
 
         Self {
             image_width,
@@ -343,6 +351,8 @@ impl<'a> Camera<'a> {
             antialiasing_type,
             samples_per_px,
             px_sample_scale,
+            sqrt_spp,
+            sqrt_spp_scale,
             max_depth,
             background,
             defocus_angle,
@@ -374,9 +384,11 @@ impl<'a> Camera<'a> {
             for i in 0..*image_width {
                 let mut px_color = Color::black();
 
-                for _ in 0..self.samples_per_px {
-                    let ray = self.get_ray(i, j);
-                    px_color += self.ray_color(&ray, self.max_depth, world);
+                for strata_j in 0..self.sqrt_spp {
+                    for strata_i in 0..self.sqrt_spp {
+                        let ray = self.get_ray(i, j, strata_i, strata_j);
+                        px_color += self.ray_color(&ray, self.max_depth, world);
+                    }
                 }
 
                 px_color.set_brightness(self.px_sample_scale);
@@ -389,12 +401,13 @@ impl<'a> Camera<'a> {
     }
 
     /// Constructs a camera [`Ray4`] originating from the camera's `center` and directed at a
-    /// randomly sampled point around the pixel location `(i, j)`, at a random time between
-    /// 0.0 and 1.0.
-    fn get_ray(&self, i: u32, j: u32) -> Ray4 {
-        let offset = match self.antialiasing_type {
-            AntialiasingType::Disc => Vec2::random_in_unit_circle() / 2,
-            AntialiasingType::Square => Vec2::random_range(-0.5..0.5),
+    /// randomly sampled point around the pixel location `(i, j)`, for stratified sample square
+    /// `(strata_i, strata_j)`, at a random time between 0.0 and 1.0.
+    fn get_ray(&self, i: u32, j: u32, strata_i: u32, strata_j: u32) -> Ray4 {
+        let offset = {
+            let x = ((f64::from(strata_i) + rand::random::<f64>()) * self.sqrt_spp_scale) - 0.5;
+            let y = ((f64::from(strata_j) + rand::random::<f64>()) * self.sqrt_spp_scale) - 0.5;
+            Vec2::new(x, y)
         };
 
         // px_sample is equal to the center of the pixel (offset in the 3d plane by 2d vectors i(Δu) and j(Δv))

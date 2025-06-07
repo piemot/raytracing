@@ -232,6 +232,10 @@ impl HittableVec {
         };
         self.objects.push(obj);
     }
+
+    pub fn len(&self) -> usize {
+        self.objects.len()
+    }
 }
 
 impl Hittable for HittableVec {

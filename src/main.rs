@@ -1,85 +1,53 @@
+use std::rc::Rc;
+
 use raytracing::{
     camera::AntialiasingType,
+    config::ConfigModel,
     export::PngWriter,
-    hittable::{Disc, HittableVec, Parallelogram, Triangle},
+    hittable::{box3, RotateY, Translate},
     material::Lambertian,
-    CameraBuilder, Color, Material as _, Point3, Texture as _, Vec3,
+    CameraBuilder, Color, Hittable, Material, Point3, Vec3,
 };
-use std::{io, rc::Rc};
 
 fn main() {
-    let mut stdout = io::stdout().lock();
+    let mut stdout = std::io::stdout().lock();
+
     let mut cam = CameraBuilder::new()
-        .with_aspect_ratio(400, 1.0)
+        .with_aspect_ratio(600, 1.0)
         .max_depth(50)
         .antialias(AntialiasingType::Square, 200)
-        .camera_center(Point3::new(0.0, 0.0, 9.0))
-        .camera_target(Point3::origin())
-        .vfov(80.0)
+        .background(raytracing::Background::Constant(Color::black()))
+        .camera_center(Point3::new(278.0, 278.0, -800.0))
+        .camera_target(Point3::new(278.0, 278.0, 0.0))
+        .vfov(40.0)
         .defocus_angle(0.0)
         .writer(PngWriter::new(&mut stdout).into_box())
         .build()
         .unwrap();
 
-    let mut world = HittableVec::new();
+    let cbox: String = std::fs::read_to_string("cornell_box.toml").unwrap();
+    let cfg: ConfigModel = cbox.parse().unwrap();
+    let mut world = cfg.as_world();
 
-    let left_red =
-        Lambertian::new(Color::new(1.0, 0.2, 0.2).solid_texture().into_texture()).into_mat();
-    let back_green = Rc::new(Lambertian::new(
-        Color::new(0.2, 1.0, 0.2).solid_texture().into_texture(),
-    ));
-    let right_blue = Rc::new(Lambertian::new(
-        Color::new(0.2, 0.2, 1.0).solid_texture().into_texture(),
-    ));
-    let upper_orange = Rc::new(Lambertian::new(
-        Color::new(1.0, 0.5, 0.0).solid_texture().into_texture(),
-    ));
-    let lower_teal = Rc::new(Lambertian::new(
-        Color::new(0.2, 0.8, 0.8).solid_texture().into_texture(),
-    ));
+    let white = Lambertian::solid(Color::white()).into_mat();
 
-    world.add(Rc::new(Parallelogram::new(
-        Point3::new(-3.0, -2.0, 5.0),
-        Vec3::new(0.0, 0.0, -4.0),
-        Vec3::new(0.0, 4.0, 0.0),
-        left_red,
-    )));
-    world.add(Rc::new(Triangle::new(
-        Point3::new(-2.0, -2.0, 0.0),
-        Vec3::new(4.0, 0.0, 0.0),
-        Vec3::new(2.0, 4.0, 0.0),
-        right_blue.clone(),
-    )));
-    world.add(Rc::new(Triangle::from_points(
-        Point3::new(-2.0, -2.0, -0.01),
-        Point3::new(2.0, -2.0, -0.01),
-        Point3::new(0.0, 2.0, -0.01),
-        back_green,
-    )));
-    world.add(Rc::new(Parallelogram::new(
-        Point3::new(3.0, -2.0, 1.0),
-        Vec3::new(0.0, 0.0, 4.0),
-        Vec3::new(0.0, 4.0, 0.0),
-        right_blue,
-    )));
-    world.add(Rc::new(Parallelogram::new(
-        Point3::new(-2.0, 3.01, 1.0),
-        Vec3::new(4.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 4.0),
-        lower_teal.clone(),
-    )));
-    world.add(Rc::new(Disc::from_center(
-        Point3::new(0.0, 3.0, 3.0),
-        Vec3::new(2.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, 2.0),
-        upper_orange.clone(),
-    )));
-    world.add(Rc::new(Disc::new(
-        Point3::new(-2.0, -3.0, 5.0),
-        Vec3::new(4.0, 0.0, 0.0),
-        Vec3::new(0.0, 0.0, -4.0),
-        lower_teal,
-    )));
+    let box1 = box3(
+        &Point3::origin(),
+        &Point3::new(165.0, 330.0, 165.0),
+        Rc::clone(&white),
+    );
+    let box1 = RotateY::new(box1, 15.0_f64.to_radians()).hittable();
+    let box1 = Translate::new(box1, Vec3::new(265.0, 0.0, 295.0)).hittable();
+    world.add(box1);
+
+    let box2 = box3(
+        &Point3::origin(),
+        &Point3::new(165.0, 165.0, 165.0),
+        Rc::clone(&white),
+    );
+    let box2 = RotateY::new(box2, -18.0_f64.to_radians()).hittable();
+    let box2 = Translate::new(box2, Vec3::new(130.0, 0.0, 65.0)).hittable();
+    world.add(box2);
 
     cam.render(&world);
 }
