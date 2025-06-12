@@ -1,0 +1,56 @@
+textures = {}
+
+[materials.red]
+type = "SolidColor"
+color = 0xA60D0D
+
+[materials.green]
+type = "SolidColor"
+color = 0x1F7326
+
+[materials.white]
+type = "SolidColor"
+color = 0xBABABA
+
+[materials.light]
+type = "ColoredLight"
+color = 0xfff
+brightness = 20
+
+
+[[objects]]
+type = "Parallelogram"
+corner = [555, 0, 0]
+vectors = [[0, 0, 555], [0, 555, 0]]
+material = "green"
+
+[[objects]]
+type = "Parallelogram"
+corner = [0, 0, 555]
+vectors = [[0, 0, -555], [0, 555, 0]]
+material = "red"
+
+[[objects]]
+type = "Parallelogram"
+corner = [0, 555, 0]
+vectors = [[555, 0, 0], [0, 0, 555]]
+material = "white"
+
+[[objects]]
+type = "Parallelogram"
+corner = [0, 0, 555]
+vectors = [[555, 0, 0], [0, 0, -555]]
+material = "white"
+
+[[objects]]
+type = "Parallelogram"
+corner = [555, 0, 555]
+vectors = [[-555, 0, 0], [0, 555, 0]]
+material = "white"
+
+# Light
+[[objects]]
+type = "Parallelogram"
+corner = [213, 554, 227]
+vectors = [[130, 0, 0], [0, 0, 105]]
+material = "light"

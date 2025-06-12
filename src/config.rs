@@ -1,10 +1,15 @@
-use crate::{hittable::HittableVec, Color, Point3, Vec3};
+use crate::{
+    hittable::{HittableVec, Parallelogram, Sphere},
+    material::{Dielectric, DiffuseLight, Isotropic, Lambertian, Metal},
+    texture::{Checkerboard, SolidColor},
+    Color, Hittable, Material, Point3, Texture, Vec3,
+};
 use miette::{bail, Result};
 use owo_colors::OwoColorize;
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use std::{collections::HashMap, path::PathBuf, rc::Rc, str::FromStr};
 
 #[derive(Debug)]
-struct ConfigModel {
+pub struct ConfigModel {
     textures: TextureStorage,
     materials: MaterialStorage,
     objects: Vec<ObjectModel>,
@@ -17,13 +22,12 @@ enum TextureModel {
     },
     Checkerboard {
         scale: f64,
-        color1: Box<TextureModel>,
-        color2: Box<TextureModel>,
+        color1: TextureStorageId,
+        color2: TextureStorageId,
     },
     Image {
         path: PathBuf,
     },
-    Ref(TextureStorageId),
 }
 
 #[derive(Debug)]
@@ -61,49 +65,54 @@ enum ObjectModel {
 }
 
 #[derive(Debug)]
-struct TextureStorage {
-    textures: HashMap<String, TextureModel>,
-    anonymous: Vec<TextureModel>,
-}
+struct TextureStorage(HashMap<TextureStorageId, Rc<dyn Texture>>, usize);
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 enum TextureStorageId {
     Anonymous(usize),
     Named(String),
 }
 
-type MaterialStorage = HashMap<String, MaterialModel>;
+type MaterialStorage = HashMap<String, Rc<dyn Material>>;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 struct MaterialStorageId(String);
 
 impl TextureStorage {
     pub fn new() -> Self {
-        Self {
-            textures: HashMap::new(),
-            anonymous: Vec::new(),
-        }
+        Self(HashMap::new(), 0)
     }
 
-    pub fn with_capacity(cap: usize) -> Self {
-        Self {
-            textures: HashMap::with_capacity(cap),
-            anonymous: Vec::new(),
-        }
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(HashMap::with_capacity(capacity), 0)
+    }
+
+    pub fn gen_id(&mut self) -> usize {
+        self.1 += 1;
+        self.1
     }
 
     pub fn push_anon(&mut self, texture: TextureModel) -> TextureStorageId {
-        self.anonymous.push(texture);
-        TextureStorageId::Anonymous(self.anonymous.len())
+        let id = TextureStorageId::Anonymous(self.gen_id());
+        let tex = texture.as_texture(&self);
+        self.0.entry(id.clone()).insert_entry(tex);
+        id
     }
 
     pub fn push_named(&mut self, key: String, texture: TextureModel) -> TextureStorageId {
-        self.textures.entry(key.clone()).insert_entry(texture);
-        TextureStorageId::Named(key)
+        let id = TextureStorageId::Named(key);
+        let tex = texture.as_texture(&self);
+        self.0.entry(id.clone()).insert_entry(tex);
+        id
     }
 
     pub fn contains_named_key(&self, name: &str) -> bool {
-        self.textures.contains_key(name)
+        self.0
+            .contains_key(&TextureStorageId::Named(name.to_string()))
+    }
+
+    pub fn get(&self, key: &TextureStorageId) -> Option<&Rc<dyn Texture>> {
+        self.0.get(key)
     }
 }
 
@@ -328,8 +337,8 @@ impl TextureModel {
 
                 Ok(Self::Checkerboard {
                     scale,
-                    color1: Box::new(TextureModel::Ref(ind1)),
-                    color2: Box::new(TextureModel::Ref(ind2)),
+                    color1: ind1,
+                    color2: ind2,
                 })
             }
             "IMAGE" => {
@@ -357,6 +366,23 @@ impl TextureModel {
                     format!("config.textures.{}.type", name).green(),
                 ));
             }
+        }
+    }
+
+    pub fn as_texture(self, texture_storage: &TextureStorage) -> Rc<dyn Texture> {
+        match self {
+            TextureModel::SolidColor { color } => SolidColor::new(color).into_texture(),
+            TextureModel::Checkerboard {
+                scale,
+                color1,
+                color2,
+            } => Checkerboard::new(
+                scale,
+                Rc::clone(texture_storage.get(&color1).unwrap()),
+                Rc::clone(texture_storage.get(&color2).unwrap()),
+            )
+            .into_texture(),
+            TextureModel::Image { path: _ } => todo!(),
         }
     }
 }
@@ -449,6 +475,24 @@ impl MaterialModel {
             }
         }
     }
+
+    pub fn as_material(self, texture_storage: &TextureStorage) -> Rc<dyn Material> {
+        match self {
+            MaterialModel::Lambertian(sid) => {
+                Lambertian::new(Rc::clone(texture_storage.get(&sid).unwrap())).into_mat()
+            }
+            MaterialModel::DiffuseLight(sid) => {
+                DiffuseLight::new(Rc::clone(texture_storage.get(&sid).unwrap())).into_mat()
+            }
+            MaterialModel::Isotropic(sid) => {
+                Isotropic::new(Rc::clone(texture_storage.get(&sid).unwrap())).into_mat()
+            }
+            MaterialModel::Metal { albedo, fuzz } => Metal::with_fuzz(albedo, fuzz).into_mat(),
+            MaterialModel::Dielectric { refractive_index } => {
+                Dielectric::new(refractive_index).into_mat()
+            }
+        }
+    }
 }
 
 impl ObjectModel {
@@ -480,6 +524,60 @@ impl ObjectModel {
                     material,
                 })
             }
+            "PARALLELOGRAM" => {
+                let value = require_value(table, "corner", &format!("config.objects.{index}"))?;
+                let corner = value.parse_point3(&format!("config.objects.{index}.corner"))?;
+                let value = require_value(table, "material", &format!("config.objects.{index}"))?;
+                let material =
+                    value.parse_material(&format!("config.objects.{index}.material"), materials)?;
+
+                let vecs = require_value(table, "vectors", &format!("config.objects.{index}"))?;
+                let vecs = vecs.parse_array(&format!("config.objects.{index}.vectors"))?;
+
+                if vecs.len() != 2 {
+                    bail!(
+                        "{} must be an array of length 2.",
+                        format!("config.objects.{index}.vectors").green()
+                    );
+                }
+
+                let vectors = [
+                    vecs[0].parse_vec3(&format!("config.objects.{index}.vectors.0"))?,
+                    vecs[1].parse_vec3(&format!("config.objects.{index}.vectors.1"))?,
+                ];
+                Ok(Self::Parallelogram {
+                    corner,
+                    vectors,
+                    material,
+                })
+            }
+            "DISC" => {
+                let value = require_value(table, "center", &format!("config.objects.{index}"))?;
+                let center = value.parse_point3(&format!("config.objects.{index}.center"))?;
+                let value = require_value(table, "material", &format!("config.objects.{index}"))?;
+                let material =
+                    value.parse_material(&format!("config.objects.{index}.material"), materials)?;
+
+                let vecs = require_value(table, "vectors", &format!("config.objects.{index}"))?;
+                let vecs = vecs.parse_array(&format!("config.objects.{index}.vectors"))?;
+
+                if vecs.len() != 2 {
+                    bail!(
+                        "{} must be an array of length 2.",
+                        format!("config.objects.{index}.vectors").green()
+                    );
+                }
+
+                let vectors = [
+                    vecs[0].parse_vec3(&format!("config.objects.{index}.vectors.0"))?,
+                    vecs[1].parse_vec3(&format!("config.objects.{index}.vectors.1"))?,
+                ];
+                Ok(Self::Disc {
+                    center,
+                    vectors,
+                    material,
+                })
+            }
             _ => {
                 bail!(miette::diagnostic!(
                     help = format!(
@@ -490,6 +588,38 @@ impl ObjectModel {
                     format!("config.objects.{}.type", index).green(),
                 ));
             }
+        }
+    }
+
+    pub fn as_hittable(self, material_storage: &MaterialStorage) -> Rc<dyn Hittable> {
+        match self {
+            ObjectModel::Sphere {
+                center,
+                radius,
+                material,
+            } => Sphere::stationary(
+                center,
+                radius,
+                Rc::clone(material_storage.get(&material.0).unwrap()),
+            )
+            .hittable(),
+            ObjectModel::Parallelogram {
+                corner,
+                vectors,
+                material,
+            } => Parallelogram::new(
+                corner,
+                vectors[0],
+                vectors[1],
+                Rc::clone(material_storage.get(&material.0).unwrap()),
+            )
+            .hittable(),
+            ObjectModel::Triangle { points, material } => todo!(),
+            ObjectModel::Disc {
+                center,
+                vectors,
+                material,
+            } => todo!(),
         }
     }
 }
@@ -534,7 +664,8 @@ impl ConfigModel {
 
             materials.insert(
                 material_id.clone(),
-                MaterialModel::parse(material_id, material_table, &mut textures)?,
+                MaterialModel::parse(material_id, material_table, &mut textures)?
+                    .as_material(&textures),
             );
         }
 
@@ -546,7 +677,8 @@ impl ConfigModel {
                 );
             };
 
-            ObjectModel::parse(i, object_table, &materials, &mut objects)?;
+            let object = ObjectModel::parse(i, object_table, &materials, &mut objects)?;
+            objects.push(object);
         }
 
         Ok(Self {
@@ -555,32 +687,13 @@ impl ConfigModel {
             objects,
         })
     }
-}
 
-#[derive(Debug)]
-struct World(HittableVec);
-
-impl World {
-    pub fn from_file_contents(s: &str) -> Result<Self, miette::Error> {
-        let conf: ConfigModel = s.parse()?;
-        let world = HittableVec::new();
-        Ok(Self(world))
-    }
-}
-
-impl FromStr for World {
-    type Err = miette::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Self::from_file_contents(s)
-    }
-}
-
-impl std::ops::Deref for World {
-    type Target = HittableVec;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    pub fn as_world(self) -> HittableVec {
+        let mut world = HittableVec::new();
+        for object in self.objects {
+            world.add(object.as_hittable(&self.materials));
+        }
+        world
     }
 }
 
@@ -606,27 +719,27 @@ type = "Checkerboard"
 textures = ["#ff0", 0xfff]
 scale = 1.0
 
-[textures.world]
-type = "Image"
-path = "assets/textures/earth.png"
+# [textures.world]
+# type = "Image"
+# path = "assets/textures/earth.png"
 
-[materials.world]
-type = "Lambertian"
-texture = "world"
+# [materials.world]
+# type = "Lambertian"
+# texture = "world"
 
 [materials.solid_red]
 # Shortcut for Lambertian material with SolidColor texture
 type = "SolidColor"
 color = 0xff0000
 
-[materials.metal]
-type = "Lambertian"
-albedo = 0xFFD700
-fuzz = 0.1
+# [materials.metal]
+# type = "Lambertian"
+# albedo = 0xFFD700
+# fuzz = 0.1
 
-[materials.light]
-type = "Light"
-texture = "world"
+# [materials.light]
+# type = "Light"
+# texture = "world"
 
 [materials.light2]
 type = "ColoredLight"
@@ -636,15 +749,16 @@ brightness = 10
 
 [[objects]]
 type = "Parallelogram"
-origin = [-3, -2, 5]
-u = [0, 0, -4]
-v = [0, 4, 0]
-material = "left_red"
+corner = [-3, -2, 5]
+vectors = [[0, 0, -4], [0, 4, 0]]
+material = "solid_red"
 "##;
 
     #[test]
     fn deser() -> Result<()> {
-        let _cfg: ConfigModel = SAMPLE.parse()?;
+        let cfg: ConfigModel = SAMPLE.parse()?;
+        let _world = cfg.as_world();
+        dbg!(_world);
         Ok(())
     }
 }
