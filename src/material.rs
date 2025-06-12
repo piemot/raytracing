@@ -2,17 +2,18 @@ use std::rc::Rc;
 
 use rand::random;
 
-use crate::{texture::SolidColor, Color, HitRecord, Point3, Ray4, Texture, Vec3};
+use crate::{texture::SolidColor, Color, HitRecord, OrthonormalBasis, Point3, Ray4, Texture, Vec3};
 
 #[derive(Debug)]
 pub struct MaterialResult {
     pub attenuation: Color,
     pub scattered: Ray4,
+    pub pdf: f64,
 }
 
 pub trait Material: std::fmt::Debug {
     fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult>;
-    fn emitted(&self, _u: f64, _v: f64, _point: &Point3) -> Color {
+    fn emitted(&self, ray_in: &Ray4, record: &HitRecord, u: f64, v: f64, point: &Point3) -> Color {
         Color::black()
     }
 
@@ -21,6 +22,10 @@ pub trait Material: std::fmt::Debug {
         Self: Sized + 'static,
     {
         Rc::new(self)
+    }
+
+    fn scattering_pdf(&self, ray_in: &Ray4, record: &HitRecord, scattered: &Ray4) -> f64 {
+        unimplemented!();
     }
 }
 
@@ -37,22 +42,36 @@ impl Lambertian {
     }
 }
 
+/// Produce a random direction weighted by cos(θ) where θ is the angle from the z-axis.
+fn random_cosine_direction() -> Vec3 {
+    let r1: f64 = random();
+    let r2 = random();
+
+    let phi = std::f64::consts::TAU * r1;
+    let x = f64::cos(phi) * f64::sqrt(r2);
+    let y = f64::sin(phi) * f64::sqrt(r2);
+    let z = f64::sqrt(1.0 - r2);
+
+    Vec3::new(x, y, z)
+}
+
 impl Material for Lambertian {
     // Lambertian materials are independant of the incoming ray due to Lambert's Cosine Law.
     fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult> {
-        let mut scatter_direction = record.normal() + Vec3::random_unit_vector();
+        let uvw = OrthonormalBasis::new(&record.normal().into());
+        let scatter_dir = uvw.transform(&random_cosine_direction());
 
-        // Catch random_unit_vector being opposite record.normal()
-        if scatter_direction.near_zero() {
-            scatter_direction = record.normal().into();
-        }
-
-        let scattered = Ray4::new(record.point(), scatter_direction, ray_in.time());
-
+        let scattered = Ray4::new(record.point(), scatter_dir.as_unit().into(), ray_in.time());
         Some(MaterialResult {
             attenuation: self.0.value(record.u(), record.v(), &record.point()),
+            pdf: Vec3::dot(&uvw.w(), &scattered.direction()) / std::f64::consts::PI,
             scattered,
         })
+    }
+
+    fn scattering_pdf(&self, ray_in: &Ray4, record: &HitRecord, scattered: &Ray4) -> f64 {
+        let cos_theta = Vec3::dot(&record.normal(), &scattered.direction().as_unit());
+        return f64::max(0.0, cos_theta / std::f64::consts::PI);
     }
 }
 
@@ -75,8 +94,13 @@ impl Material for DiffuseLight {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, point: &Point3) -> Color {
-        self.0.value(u, v, point)
+    fn emitted(&self, _ray_in: &Ray4, record: &HitRecord, u: f64, v: f64, point: &Point3) -> Color {
+        // light is unidirectional
+        if record.front_face() {
+            self.0.value(u, v, point)
+        } else {
+            Color::black()
+        }
     }
 }
 
@@ -114,6 +138,7 @@ impl Material for Metal {
 
         Some(MaterialResult {
             attenuation: self.albedo,
+            pdf: todo!(),
             scattered,
         })
     }
@@ -164,6 +189,7 @@ impl Material for Dielectric {
 
         Some(MaterialResult {
             attenuation: Color::white(),
+            pdf: todo!(),
             scattered: Ray4::new(record.point(), direction, ray_in.time()),
         })
     }
@@ -188,8 +214,13 @@ impl Material for Isotropic {
         let attenuation = self.0.value(record.u(), record.v(), &record.point());
 
         Some(MaterialResult {
+            pdf: 1.0 / (4.0 * std::f64::consts::PI),
             attenuation,
             scattered,
         })
+    }
+
+    fn scattering_pdf(&self, _: &Ray4, _: &HitRecord, _: &Ray4) -> f64 {
+        1.0 / (4.0 * std::f64::consts::PI)
     }
 }

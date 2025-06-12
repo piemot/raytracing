@@ -439,10 +439,20 @@ impl<'a> Camera<'a> {
             };
         };
 
-        let emission_color = hit.material().emitted(hit.u(), hit.v(), &hit.point());
+        let emission_color = hit
+            .material()
+            .emitted(ray, &hit, hit.u(), hit.v(), &hit.point());
         if let Some(scatter) = hit.material().scatter(ray, &hit) {
-            let bounce_color = self.ray_color(&scatter.scattered, depth - 1, world);
-            let scatter_color = Color::mul(&scatter.attenuation, &bounce_color);
+            let scattering_pdf = hit.material().scattering_pdf(ray, &hit, &scatter.scattered);
+            let pdf_value = scattering_pdf;
+
+            let mut scatter_color = scatter.attenuation;
+            scatter_color.set_brightness(scattering_pdf);
+            let mut scatter_color = Color::mul(
+                &scatter_color,
+                &self.ray_color(&scatter.scattered, depth - 1, world),
+            );
+            scatter_color.set_brightness(1.0 / pdf_value);
             Color::add(&emission_color, &scatter_color)
         } else {
             // something in the world is hit, but the scattered ray is invalid
