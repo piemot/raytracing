@@ -96,6 +96,16 @@ pub trait Hittable: std::fmt::Debug {
     // can return None, but will never recieve any [hit()]s.
     fn bounding_box(&self) -> Option<&BoundingBox3>;
 
+    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+        let _ = (origin, direction);
+        unimplemented!();
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let _ = origin;
+        unimplemented!();
+    }
+
     fn hittable(self) -> Rc<dyn Hittable>
     where
         Self: Sized + 'static,
@@ -275,6 +285,7 @@ pub struct Parallelogram {
     v: Vec3,
     w: Vec3,
     d: f64,
+    area: f64,
     normal: Vec3<Normalized>,
     material: Rc<dyn Material>,
     bounding_box: BoundingBox3,
@@ -292,6 +303,7 @@ impl Parallelogram {
         let d = Vec3::dot(&normal, &Vec3::from(corner));
 
         let w = n / Vec3::dot(&n, &n);
+        let area = n.len();
 
         Self {
             corner,
@@ -299,6 +311,7 @@ impl Parallelogram {
             v,
             d,
             w,
+            area,
             normal,
             material,
             bounding_box,
@@ -359,6 +372,26 @@ impl Hittable for Parallelogram {
 
     fn bounding_box(&self) -> Option<&BoundingBox3> {
         Some(&self.bounding_box)
+    }
+
+    fn pdf_value(&self, origin: &Point3, direction: &Vec3) -> f64 {
+        let Some(hit) = self.hit(
+            &Ray4::new(*origin, *direction, 0.0),
+            Interval::new(0.001, f64::INFINITY),
+        ) else {
+            return 0.0;
+        };
+
+        let dist_squared = hit.t() * hit.t() * direction.len_squared();
+        let cosine = (direction.dot(&hit.normal()) / direction.len()).abs();
+
+        dist_squared / (cosine * self.area)
+    }
+
+    fn random(&self, origin: &Point3) -> Vec3 {
+        let p: Point3 =
+            self.corner + (rand::random::<f64>() * self.u) + (rand::random::<f64>() * self.v);
+        p - origin
     }
 }
 

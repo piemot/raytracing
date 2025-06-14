@@ -12,10 +12,10 @@ color = 0x1F7326
 type = "SolidColor"
 color = 0xBABABA
 
-[materials.light]
-type = "ColoredLight"
-color = 0xfff
-brightness = 20
+# [materials.light]
+# type = "ColoredLight"
+# color = 0xfff
+# brightness = 20
 
 
 [[objects]]
@@ -48,9 +48,9 @@ corner = [555, 0, 555]
 vectors = [[-555, 0, 0], [0, 555, 0]]
 material = "white"
 
-# Light
-[[objects]]
-type = "Parallelogram"
-corner = [213, 554, 227]
-vectors = [[130, 0, 0], [0, 0, 105]]
-material = "light"
+# # Light
+# [[objects]]
+# type = "Parallelogram"
+# corner = [213, 554, 227]
+# vectors = [[130, 0, 0], [0, 0, 105]]
+# material = "light"

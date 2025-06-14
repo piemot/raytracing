@@ -2,9 +2,12 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rand::random;
 
 use crate::{
-    export::ImageWriter, vec::Normalized, Color, Hittable, Interval, Point3, Ray4, Vec2, Vec3,
+    export::ImageWriter,
+    pdf::{HittablePDF, PDF},
+    vec::Normalized,
+    Color, Hittable, Interval, Point3, Ray4, Vec2, Vec3,
 };
-use std::error::Error;
+use std::{error::Error, rc::Rc};
 
 #[derive(Debug)]
 #[must_use]
@@ -362,7 +365,7 @@ impl<'a> Camera<'a> {
         }
     }
 
-    pub fn render(&mut self, world: &impl Hittable) {
+    pub fn render(&mut self, world: &impl Hittable, lights: Rc<dyn Hittable>) {
         let Self {
             ref image_width,
             ref image_height,
@@ -387,7 +390,7 @@ impl<'a> Camera<'a> {
                 for strata_j in 0..self.sqrt_spp {
                     for strata_i in 0..self.sqrt_spp {
                         let ray = self.get_ray(i, j, strata_i, strata_j);
-                        px_color += self.ray_color(&ray, self.max_depth, world);
+                        px_color += self.ray_color(&ray, self.max_depth, world, Rc::clone(&lights));
                     }
                 }
 
@@ -426,7 +429,13 @@ impl<'a> Camera<'a> {
         Ray4::new(ray_origin, ray_direction, random())
     }
 
-    fn ray_color(&self, ray: &Ray4, depth: u32, world: &impl Hittable) -> Color {
+    fn ray_color(
+        &self,
+        ray: &Ray4,
+        depth: u32,
+        world: &impl Hittable,
+        lights: Rc<dyn Hittable>,
+    ) -> Color {
         if depth == 0 {
             // Exceeded the bounce depth limit :(
             return Color::black();
@@ -448,38 +457,15 @@ impl<'a> Camera<'a> {
             return emission_color;
         };
 
-        /* let on_light = Point3::new(
-            rand::random_range(213.0..343.0),
-            554.0,
-            rand::random_range(227.0..332.0),
-        );
-        let to_light = on_light - hit.point();
-        let dist_sq = to_light.len_squared();
-        let to_light = to_light.as_unit();
+        let light_pdf = HittablePDF::new(Rc::clone(&lights), &hit.point());
+        let scattered = Ray4::new(hit.point(), light_pdf.generate(), ray.time());
+        let pdf_value = light_pdf.value(&scattered.direction());
 
-        if Vec3::dot(&to_light, &hit.normal()) < 0.0 {
-            return emission_color;
-        }
+        let scattering_pdf = hit.material().scattering_pdf(ray, &hit, &scatter.scattered);
 
-        let light_area = (343.0 - 213.0) * (332.0 - 227.0);
-        let light_cos = to_light.y().abs();
-        if light_cos < 0.0000001 {
-            return emission_color;
-        }
-
-        let pdf_value = dist_sq / (light_cos * light_area);
-        let scattered = Ray4::new(hit.point(), to_light.into(), ray.time()); */
-
-        // ---
-
-        // let scattering_pdf = hit.material().scattering_pdf(ray, &hit, &scatter.scattered);
-        // let pdf_value = scattering_pdf;
-
-        let scatter_color =
-            scatter
-                .attenuation
-                .mul(&self.ray_color(&scatter.scattered, depth - 1, world));
-        // scatter_color.set_brightness(scattering_pdf / pdf_value);
+        let sample_color = self.ray_color(&scattered, depth - 1, world, lights);
+        let mut scatter_color = Color::mul(&scatter.attenuation, &sample_color);
+        scatter_color.set_brightness(scattering_pdf / pdf_value);
 
         Color::add(&emission_color, &scatter_color)
     }
