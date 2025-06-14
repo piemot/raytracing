@@ -42,24 +42,11 @@ impl Lambertian {
     }
 }
 
-/// Produce a random direction weighted by cos(θ) where θ is the angle from the z-axis.
-fn random_cosine_direction() -> Vec3 {
-    let r1: f64 = random();
-    let r2 = random();
-
-    let phi = std::f64::consts::TAU * r1;
-    let x = f64::cos(phi) * f64::sqrt(r2);
-    let y = f64::sin(phi) * f64::sqrt(r2);
-    let z = f64::sqrt(1.0 - r2);
-
-    Vec3::new(x, y, z)
-}
-
 impl Material for Lambertian {
     // Lambertian materials are independant of the incoming ray due to Lambert's Cosine Law.
     fn scatter(&self, ray_in: &Ray4, record: &HitRecord) -> Option<MaterialResult> {
         let uvw = OrthonormalBasis::new(&record.normal().into());
-        let scatter_dir = uvw.transform(&random_cosine_direction());
+        let scatter_dir = uvw.transform(&Vec3::random_on_sphere_cosine());
 
         let scattered = Ray4::new(record.point(), scatter_dir.as_unit().into(), ray_in.time());
         Some(MaterialResult {

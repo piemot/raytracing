@@ -1,5 +1,6 @@
 use crate::{vec::Normalized, Vec3};
 
+#[derive(Debug)]
 pub struct OrthonormalBasis {
     u: Vec3<Normalized>,
     v: Vec3<Normalized>,
@@ -12,14 +13,15 @@ impl OrthonormalBasis {
     pub fn new(vec: &Vec3) -> Self {
         let w = vec.as_unit();
 
-        let a = if w.x() > 0.9 {
+        let a = if w.x().abs() > 0.9 {
             Vec3::new(0.0, 1.0, 0.0)
         } else {
             Vec3::new(1.0, 0.0, 0.0)
         }
         .as_unit();
 
-        let v = Vec3::<Normalized>::cross(&w, &a);
+        let v: Vec3 = Vec3::<Normalized>::cross(&w, &a).into();
+        let v = v.as_unit();
         let u = Vec3::<Normalized>::cross(&w, &v);
 
         Self { u, v, w }

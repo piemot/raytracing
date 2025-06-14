@@ -442,22 +442,46 @@ impl<'a> Camera<'a> {
         let emission_color = hit
             .material()
             .emitted(ray, &hit, hit.u(), hit.v(), &hit.point());
-        if let Some(scatter) = hit.material().scatter(ray, &hit) {
-            let scattering_pdf = hit.material().scattering_pdf(ray, &hit, &scatter.scattered);
-            let pdf_value = scattering_pdf;
 
-            let mut scatter_color = scatter.attenuation;
-            scatter_color.set_brightness(scattering_pdf);
-            let mut scatter_color = Color::mul(
-                &scatter_color,
-                &self.ray_color(&scatter.scattered, depth - 1, world),
-            );
-            scatter_color.set_brightness(1.0 / pdf_value);
-            Color::add(&emission_color, &scatter_color)
-        } else {
+        let Some(scatter) = hit.material().scatter(ray, &hit) else {
             // something in the world is hit, but the scattered ray is invalid
-            emission_color
+            return emission_color;
+        };
+
+        /* let on_light = Point3::new(
+            rand::random_range(213.0..343.0),
+            554.0,
+            rand::random_range(227.0..332.0),
+        );
+        let to_light = on_light - hit.point();
+        let dist_sq = to_light.len_squared();
+        let to_light = to_light.as_unit();
+
+        if Vec3::dot(&to_light, &hit.normal()) < 0.0 {
+            return emission_color;
         }
+
+        let light_area = (343.0 - 213.0) * (332.0 - 227.0);
+        let light_cos = to_light.y().abs();
+        if light_cos < 0.0000001 {
+            return emission_color;
+        }
+
+        let pdf_value = dist_sq / (light_cos * light_area);
+        let scattered = Ray4::new(hit.point(), to_light.into(), ray.time()); */
+
+        // ---
+
+        // let scattering_pdf = hit.material().scattering_pdf(ray, &hit, &scatter.scattered);
+        // let pdf_value = scattering_pdf;
+
+        let scatter_color =
+            scatter
+                .attenuation
+                .mul(&self.ray_color(&scatter.scattered, depth - 1, world));
+        // scatter_color.set_brightness(scattering_pdf / pdf_value);
+
+        Color::add(&emission_color, &scatter_color)
     }
 
     fn skybox_bg(ray: &Ray4) -> Color {

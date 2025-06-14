@@ -7,6 +7,7 @@ pub mod hittable;
 pub mod material;
 pub mod math;
 pub mod onb;
+pub mod pdf;
 pub mod texture;
 
 pub use axis::Axis;

@@ -15,7 +15,7 @@ fn main() {
     let mut cam = CameraBuilder::new()
         .with_aspect_ratio(600, 1.0)
         .max_depth(50)
-        .antialias(AntialiasingType::Square, 200)
+        .antialias(AntialiasingType::Square, 20)
         .background(raytracing::Background::Constant(Color::black()))
         .camera_center(Point3::new(278.0, 278.0, -800.0))
         .camera_target(Point3::new(278.0, 278.0, 0.0))

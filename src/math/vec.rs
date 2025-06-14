@@ -240,6 +240,21 @@ impl Vec3<Unknown> {
         }
     }
 
+    /// Return a unit(?) [`Vec3`] to a random point on the edge of the unit sphere,
+    /// weighted by cos(θ) where θ is the angle from the z-axis.
+    #[inline]
+    pub fn random_on_sphere_cosine() -> Vec3 {
+        let r1: f64 = rand::random();
+        let r2 = rand::random();
+
+        let phi = std::f64::consts::TAU * r1;
+        let x = f64::cos(phi) * f64::sqrt(r2);
+        let y = f64::sin(phi) * f64::sqrt(r2);
+        let z = f64::sqrt(1.0 - r2);
+
+        Vec3::new(x, y, z)
+    }
+
     /// Consumes this [`Vec3`] and produces a [`Vec3`] in the same direction, normalized to a length of `1.0`.
     pub fn normalize(self) -> Vec3<Normalized> {
         let r = self / self.len();
