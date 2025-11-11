@@ -66,7 +66,7 @@ objects to specify their position at a given time, allowing arbitrary
 animations across a frame.
 
 #figure(
-  image("assets/motionblur.png", width: 70%),
+  image("../assets/motionblur.png", width: 70%),
   caption: [
     A set of balls, moving vertically with a motion-blur effect
   ],
@@ -95,7 +95,7 @@ and are optimized away. Not pictured are the many other rays, pointing
 sideways or backwards, that would also be optimized out by this method.
 
 #figure(
-  image("assets/03-09-boundingbox.svg", width: 70%),
+  image("../assets/03-09-boundingbox.svg", width: 70%),
   caption: [
     A diagram of rays intersecting a bounding box
   ],
@@ -132,7 +132,7 @@ a rectangle in 2D space and a rectangular prism in 3D space, as illustrated
 in @boundingbox-const.
 
 #figure(
-  image("assets/03-09-boundingbox-const.svg", width: 70%),
+  image("../assets/03-09-boundingbox-const.svg", width: 70%),
   caption: [
     The construction of a bounding box from intervals $x= (2, 3)$ and $y =(0, 1)$
   ],
@@ -151,7 +151,7 @@ areas $C_x$ and $C_y$. But since ray $B$ goes through the bounding box,
 areas $B_x$ and $B_y$ intersect inside that box.
 
 #figure(
-  image("assets/03-09-intersect.svg", width: 70%),
+  image("../assets/03-09-intersect.svg", width: 70%),
   caption: [
     Bounding box intersections: ray $B$ passes through the box while rays $A$ and $C$ miss it.
   ],
@@ -197,7 +197,7 @@ rectangle that can fit over all its' children's own bounding boxes.
 The key to this optimization lies in the name: Bounding Volume *Hierarchies*.
 
 #figure(
-  image("assets/03-09-hierarchy.svg", width: 70%),
+  image("../assets/03-09-hierarchy.svg", width: 70%),
   caption: [
     A hierarchy of bounding boxes surrounding objects
   ],
@@ -228,7 +228,7 @@ based on some parameter, like the y-value of the hit.
 This would appear as something like @dicolor-mat.
 
 #figure(
-  image("assets/dicolor.png", width: 70%),
+  image("../assets/dicolor.png", width: 70%),
   caption: [
     A two-colored sphere
   ],
@@ -296,7 +296,7 @@ Adjusting the Lambertian material to accept textures, instead of only colors,
 the ground can be rendered in @checkerboard as a checkerboard.
 
 #figure(
-  image("assets/checkerboard.png", width: 70%),
+  image("../assets/checkerboard.png", width: 70%),
   caption: [
     The bouncing balls scene, but with a checkerboard green and white ground
   ],
@@ -306,7 +306,7 @@ Rendering two checkerboard-textured spheres on top of one another
 in @checker-spheres, something kind of weird starts to happen.
 
 #figure(
-  image("assets/checker-spheres.png", width: 70%),
+  image("../assets/checker-spheres.png", width: 70%),
   caption: [
     Two checkered spheres on top of each other
   ],
@@ -317,12 +317,12 @@ of the spheres. This happens because the checkerboard texture is a *3D* texture;
 the $y$-position as well as $x$ and $z$. What happens if this influence is removed?
 
 #align(center)[
-  #image("assets/checker-spheres-y.png", width: 70%),
+  #image("../assets/checker-spheres-y.png", width: 70%),
 ]
 Okay, that looks pretty good!
 
 #align(center)[
-  #image("assets/checker-spheres-y-zoom.png", width: 70%),
+  #image("../assets/checker-spheres-y-zoom.png", width: 70%),
 ]
 
 Oh.
@@ -365,7 +365,7 @@ $ v = i/(N_y - 1) $
 With these formulas, an image of the world like @earth-tex
 
 #figure(
-  image("assets/textures/earth.png", width: 70%),
+  image("../assets/textures/earth.png", width: 70%),
   caption: [
     A rectangular satellite image of the Earth
   ],
@@ -374,7 +374,7 @@ With these formulas, an image of the world like @earth-tex
 can be rendered across a sphere, in @earth!
 
 #figure(
-  image("assets/earth.png", width: 70%),
+  image("../assets/earth.png", width: 70%),
   caption: [
     The texture from @earth-tex, rendered across a sphere using texture mapping
   ],
@@ -395,7 +395,7 @@ The corners of this parallelogram are easy to calculate
 (see @parallelogram): $Q + v$, $Q + u$, and $Q + v + u$.
 
 #figure(
-  image("assets/03-10-parallelogram.svg", width: 70%),
+  image("../assets/03-10-parallelogram.svg", width: 70%),
   caption: [
     A 2D parallelogram and the definition of its corners
   ],
@@ -416,7 +416,7 @@ A parallelogram, or any planar/flat shape, can be thought of as a segment of
 a plane parallel to its face.
 
 #figure(
-  image("assets/03-10-2d-plane.svg", width: 70%),
+  image("../assets/03-10-2d-plane.svg", width: 70%),
   caption: [
     A 2D object on an infinite plane
   ],
@@ -465,7 +465,7 @@ from `0.0` to `1.0`), the ray intersects the parallelogram if
 $0 <= alpha <= 1$ and $0 <= beta <= 1$.
 
 #figure(
-  image("assets/squares.png", width: 70%),
+  image("../assets/squares.png", width: 70%),
   caption: [
     Planar squares, rendered on various axes
   ],
@@ -488,7 +488,7 @@ Similarly, a triangle could be represented as $(alpha > 0) and (beta > 0) and
 and $Q + v$ (see @parallelogram for these points).
 
 #figure(
-  image("assets/shapes.png", width: 70%),
+  image("../assets/shapes.png", width: 70%),
   caption: [
     Rendered squares, triangles, and discs
   ],
@@ -536,7 +536,7 @@ A yellow sphere with no surrounding light except a single light source
 shining towards it is rendered in @light.
 
 #figure(
-  image("assets/light.png", width: 70%),
+  image("../assets/light.png", width: 70%),
   caption: [
     A sphere with light shining towards it
   ],
@@ -548,7 +548,7 @@ emissive. For instance, a sphere could hang from the ceiling to illuminate
 from above as well, like in @light2.
 
 #figure(
-  image("assets/light2.png", width: 70%),
+  image("../assets/light2.png", width: 70%),
   caption: [
     A sphere with light shining towards it from the side and above
   ],
@@ -566,7 +566,7 @@ A box can be constructed out of five walls, and the light at the top of the
 box can consist of a sixth quadrilateral.
 
 #figure(
-  image("assets/cornell-1.png", width: 70%),
+  image("../assets/cornell-1.png", width: 70%),
   caption: [
     An empty Cornell box
   ],
@@ -586,7 +586,7 @@ into the Cornell box scene (and doubling the strength of the light for better
 visibility), they render just as expected in @cornell-2.
 
 #figure(
-  image("assets/cornell-2.png", width: 70%),
+  image("../assets/cornell-2.png", width: 70%),
   caption: [
     A Cornell box with objects inside it
   ],
@@ -610,7 +610,7 @@ box, it can be translated so that its origin is at `(0.5, 2)` while the
 hit calculation takes place, then moved back afterwards.
 
 #figure(
-  image("assets/03-24-instance-translate.svg", width: 70%),
+  image("../assets/03-24-instance-translate.svg", width: 70%),
   caption: [
     An example of instanced translation
   ],
@@ -642,7 +642,7 @@ Implementing this instancing, the final version of the classic Cornell box
 is shown in @cornell-3.
 
 #figure(
-  image("assets/cornell-3.png", width: 70%),
+  image("../assets/cornell-3.png", width: 70%),
   caption: [
     A classic Cornell box with rotated boxes inside it
   ],
@@ -657,7 +657,7 @@ smoke or fog. It can be represented by a surface that may or may not exist
 for each point inside the volume.
 
 #figure(
-  image("assets/03-24-volume.svg", width: 70%),
+  image("../assets/03-24-volume.svg", width: 70%),
   caption: [
     An example volume, scattering some light at various positions
     and allowing some rays to pass through unhindered
@@ -683,7 +683,7 @@ directions at the same speed.
 Putting this together, a few foggy boxes are placed in the Cornell box in
 @cornell-4.
 #figure(
-  image("assets/cornell-4.png", width: 70%),
+  image("../assets/cornell-4.png", width: 70%),
   caption: [
     A Cornell box with foggy boxes inside it
   ],
@@ -700,7 +700,7 @@ To fix this, I've added some conversion code so that points can be specified
 more easily:
 
 #align(center)[
-  #image("assets/03-25-shapes.svg", width: 70%),
+  #image("../assets/03-25-shapes.svg", width: 70%),
 ]
 
 For triangles, the three points of the triangle can be specified instead

@@ -81,7 +81,7 @@ while #text(rgb("e03131"), font: "Comic Neue")[red]
 or retracting their length so that they touch the unit circle.
 
 #figure(
-  image("assets/02-16-vectors.svg", width: 70%),
+  image("../assets/02-16-vectors.svg", width: 70%),
   caption: [An illustration of vectors in 2D space],
 )<vectors>
 
@@ -92,7 +92,7 @@ A vector can be trivially converted to a point, and vice versa. See how the poin
 Vectors can be added and subtracted (@vector-math); subtracting a vector is equivalent to adding the negative of that vector.
 
 #figure(
-  image("assets/02-16-vector-math.svg", width: 70%),
+  image("../assets/02-16-vector-math.svg", width: 70%),
   caption: [An illustration vector subtraction and addition in 2D space],
 )<vector-math>
 
@@ -163,7 +163,7 @@ color channel increasing from 0 to 255 across the left to right axis, and
 the green channel increasing across the top to bottom axis. This can be seen in @ppm-example.
 
 #figure(
-  image("assets/test-ppm.png"),
+  image("../assets/test-ppm.png"),
   caption: [
     An example PPM image, increasing in the red channel\ from left to right
     and the green channel from top to bottom.
@@ -219,7 +219,7 @@ The result is the same, because rays that hit the camera are just the
 reverse of rays that would hit the camera, if they came from a light source.
 
 #figure(
-  image("assets/02-17-raycast.svg", width: 70%),
+  image("../assets/02-17-raycast.svg", width: 70%),
   caption: [
     A ray is cast from an origin through a plane called the viewport
   ],
@@ -246,7 +246,7 @@ $1/2 Delta arrow(u) + 1/2 Delta arrow(v)$, or the
 
 
 #figure(
-  image("assets/02-17-viewport.svg", width: 70%),
+  image("../assets/02-17-viewport.svg", width: 70%),
   caption: [
     A ray is cast from an origin through a plane called the viewport
   ],
@@ -264,7 +264,7 @@ the center, where the $x$ component of the ray is 0.0 and so the
 $y$ component must be greater..
 
 #figure(
-  image("assets/background.png", width: 70%),
+  image("../assets/background.png", width: 70%),
   caption: [
     A blue gradient as a background/sky
   ],
@@ -305,7 +305,7 @@ axis goes upwards) and blue is strong on the side (because the $z$ axis goes
 approximately leftwards).
 
 #figure(
-  image("assets/normals.png", width: 70%),
+  image("../assets/normals.png", width: 70%),
   caption: [
     A sphere colored according to its surface normals
   ],
@@ -351,7 +351,7 @@ also tried sampling from a disc with a 1px radius. I was curious to know if
 sampling from a disc instead of a square affects the resultant rendering.
 
 #figure(
-  image("assets/02-20-antialiasing.svg", width: 70%),
+  image("../assets/02-20-antialiasing.svg", width: 70%),
   caption: [
     A comparison of antialiasing techniques and samples per pixel
   ],
@@ -414,7 +414,7 @@ Both ways of thinking about this result in the same effect. This is why
 ray-tracing by firing beams from a camera point works.
 
 #figure(
-  image("assets/lambertian.png", width: 70%),
+  image("../assets/lambertian.png", width: 70%),
   caption: [
     Two spheres, rendered with ray marching
   ],
@@ -449,7 +449,7 @@ each bounce in the first strip, 30% by the next, and so on until the final
 strip contains spheres reflecting 90% of the light that hits them.
 
 #figure(
-  image("assets/gamma-0.png", width: 70%),
+  image("../assets/gamma-0.png", width: 70%),
   caption: [
     Two spheres, rendered with ray marching, demonstrating a linear gamut
   ],
@@ -498,7 +498,7 @@ not column 4 like in @t-gamma-0; the lightness of the strips ramp up
 linearly instead of exponentially.
 
 #figure(
-  image("assets/gamma-1.png", width: 70%),
+  image("../assets/gamma-1.png", width: 70%),
   caption: [
     Two spheres, rendered with ray marching --- $gamma$ 2 corrected and
     demonstrating a consistent gamut
@@ -591,7 +591,7 @@ colors, so a light blue like the sky contains a significant amount of
 red light, even though it has more blue in it than red.
 
 #figure(
-  image("assets/metal-bug.png", width: 70%),
+  image("../assets/metal-bug.png", width: 70%),
   caption: [
     Two metal spheres surrounding a matte sphere - with a bug
   ],
@@ -620,7 +620,7 @@ This also caused some slight blue tinting of the grass in the right sphere,
 although it's a much more subtle effect. @metal-fix shows the fixed image.
 
 #figure(
-  image("assets/metal-fix.png", width: 70%),
+  image("../assets/metal-fix.png", width: 70%),
   caption: [
     Two correctly rendered metal spheres surrounding a matte sphere
   ],
@@ -642,14 +642,14 @@ the left sphere is tending to fuzzily reflect most of the light hitting it,
 while the right sphere prefers to reflect mostly red and green light.
 
 #figure(
-  image("assets/02-25-fuzz.svg", width: 70%),
+  image("../assets/02-25-fuzz.svg", width: 70%),
   caption: [
     The calculation of fuzziness
   ],
 )<fuzz>
 
 #figure(
-  image("assets/fuzzy.png", width: 70%),
+  image("../assets/fuzzy.png", width: 70%),
   caption: [
     30% and 100% fuzzy metal balls
   ],
@@ -717,7 +717,7 @@ Putting this into effect in @glass, the left ball is rendered as a glass ball
 ($eta = 1.5$) with a bubble of air ($eta approx 1.00$) inside it.
 
 #figure(
-  image("assets/glass.png", width: 70%),
+  image("../assets/glass.png", width: 70%),
   caption: [
     Hollow glass, Lambertian, and fuzzy metal spheres.
   ],
@@ -752,7 +752,7 @@ The blue Lambertian sphere is refracted through the glass sphere, just like
 it would be in the real world.
 
 #figure(
-  image("assets/dynamic-cam.png", width: 70%),
+  image("../assets/dynamic-cam.png", width: 70%),
   caption: [
     An image rendered with a far-away and low-FOV camera.
   ],
@@ -777,7 +777,7 @@ A few key things to note about the scene:
   look a bit strange.
 
 #figure(
-  image("assets/final-scene.png", width: 70%),
+  image("../assets/final-scene.png", width: 70%),
   caption: [
     A variety of materials and colors.
   ],
@@ -812,7 +812,7 @@ Rust has a great library for this: `indicatif`
 
 
 #figure(
-  image("assets/progressbar.png", width: 70%),
+  image("../assets/progressbar.png", width: 70%),
   caption: [
     An `indicatif` progress bar
   ],

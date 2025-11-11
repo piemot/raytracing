@@ -15,6 +15,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      - uses: fontist/setup-fontist@v2
+
+      - run: fontist install "Comic Neue"
+
       - uses: typst-community/setup-typst@v4
         with:
           typst-version: ^0.14.0
@@ -24,9 +29,9 @@ jobs:
 
       - name: Compile documents
         run: |
-          typst compile progress-logs/log-1.typ build/log-1.pdf
-          typst compile progress-logs/log-2.typ build/log-2.pdf
-          typst compile progress-logs/log-3.typ build/log-3.pdf
+          typst compile progress-logs/log-1.typ build/log-1.pdf --font-path ~/.fontist/fonts --root .
+          typst compile progress-logs/log-2.typ build/log-2.pdf --font-path ~/.fontist/fonts --root .
+          typst compile progress-logs/log-3.typ build/log-3.pdf --font-path ~/.fontist/fonts --root .
 
       - name: Upload site files as artifact
         id: deployment

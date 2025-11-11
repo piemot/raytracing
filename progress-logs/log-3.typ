@@ -156,7 +156,7 @@ In the previous Action Log, I rendered a Cornell Box (see @cornell-box).
 The main optimization I'd like to focus on is reducing the noise visible in the image. The noise is present because the amount of light varies across adjacent, similar, pixels. In turn, this effect is due to randomly reflected rays tending to miss the small light source most of the time, which causes a noisy effect. If, instead, they were to hit the light source more often, but were downscaled appropriately, the image would appear less noisy.
 
 #figure(
-  image("assets/cornell-3.png", width: 70%),
+  image("../assets/cornell-3.png", width: 70%),
   caption: [A rendering of a Cornell Box, from the last Action Log]
 )<cornell-box>
 
@@ -185,7 +185,7 @@ Essentially, what this formula descrives is that the color of a pixel, based on 
 + $p(...)$, the color (wavelength) of the bounced beam.
 
 #figure(
-  image("assets/new-cornell.png", width: 70%),
+  image("../assets/new-cornell.png", width: 70%),
   caption: [A rendering of a Cornell Box, with reduced noise because only rays connecting with the light are sampled]
 )<new-cornell-box>
 
